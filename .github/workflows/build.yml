@@ -1,0 +1,57 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+# Signing & notarization are intentionally DISABLED for CI: the produced .dmg
+# is unsigned (CSC_IDENTITY_AUTO_DISCOVERY=false + mac.identity:null in the
+# electron-builder config). Users will need to right-click > Open on first run.
+jobs:
+  build-macos:
+    name: Build macOS DMG
+    runs-on: macos-14 # Apple Silicon runner
+    permissions:
+      contents: write # needed for creating releases on tag pushes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test
+
+      - name: Package macOS DMG (unsigned)
+        run: npx electron-builder --mac --config config/electron-builder.config.cjs --publish never
+        env:
+          # Skip code signing in CI — produce an unsigned build.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: loop-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
