@@ -32,6 +32,7 @@ export default function App(): React.JSX.Element {
   const runs = useStore((s) => s.runs)
   const tweaks = useStore((s) => s.tweaks)
   const settings = useStore((s) => s.settings)
+  const update = useStore((s) => s.update)
 
   const [view, setView] = React.useState<View>({ screen: 'routines' })
   const [editorRoutineId, setEditorRoutineId] = React.useState<string | null | undefined>(undefined)
@@ -113,6 +114,16 @@ export default function App(): React.JSX.Element {
           ))}
         </nav>
         <div className="sidebar-spacer" />
+        {update.phase === 'available' && update.info?.latestVersion ? (
+          <button
+            type="button"
+            className="update-banner mono"
+            onClick={() => setView({ screen: 'settings' })}
+          >
+            <Icon name="spark" size={13} />
+            Update available · v{update.info.latestVersion}
+          </button>
+        ) : null}
         <div className="sidebar-foot mono">
           {settings.pausedAll ? (
             <span className="sf-line">all paused</span>

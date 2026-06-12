@@ -113,6 +113,34 @@ export type Settings = {
   runTimeoutMinutes: number
 }
 
+/** Lifecycle of the in-app (assisted) updater, tracked at runtime — not persisted. */
+export type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
+
+/** Result of a check against the GitHub Releases feed. */
+export type UpdateInfo = {
+  currentVersion: string
+  latestVersion: string | null
+  available: boolean
+  /** Release page — used for the "view release notes" fallback. */
+  releaseUrl: string | null
+  /** Arch-matched .dmg download URL. */
+  assetUrl: string | null
+  assetName: string | null
+  /** Release body / notes (optional, shown in Settings). */
+  notes: string | null
+  /** ISO timestamp of the check. */
+  checkedAt: string
+}
+
+/** Current updater state pushed to the renderer over IPC. */
+export type UpdateStatus = {
+  phase: UpdatePhase
+  info: UpdateInfo | null
+  /** Download progress 0–100 while phase is 'downloading'. */
+  percent?: number
+  error?: string
+}
+
 /** The full persisted application state (one JSON file). */
 export type AppData = {
   version: number

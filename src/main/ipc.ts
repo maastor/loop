@@ -11,6 +11,7 @@ import { createRunningRun } from '@core/claude-runner'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
+import { checkForUpdate, downloadAndOpen, openReleasePage, getStatus } from './updater'
 
 export type IpcDeps = {
   store: Store
@@ -123,6 +124,13 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
   })
 
   ipcMain.handle(IPC.openWindow, () => showMainWindow())
+
+  ipcMain.handle(IPC.updateCheck, async () => {
+    await checkForUpdate()
+    return getStatus()
+  })
+  ipcMain.handle(IPC.updateStart, () => downloadAndOpen())
+  ipcMain.handle(IPC.updateOpenRelease, () => openReleasePage())
 
   ipcMain.handle(IPC.selectDirectory, async () => {
     const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]

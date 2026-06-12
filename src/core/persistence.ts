@@ -36,9 +36,31 @@ function normalize(data: Partial<AppData> | null): AppData {
 export class Store {
   private state: AppData
   private lastMtimeMs = 0
+  private changeListeners = new Set<() => void>()
 
   constructor() {
     this.state = this.readFromDisk()
+  }
+
+  /**
+   * Subscribe to local mutations (anything that goes through `mutate`). The main process
+   * uses this to broadcast to the renderer after every write — far more reliable than
+   * watching the data file, whose `fs.watch` goes deaf after the first atomic rename.
+   * Returns an unsubscribe function. Cross-process (daemon) writes are NOT seen here.
+   */
+  onChange(listener: () => void): () => void {
+    this.changeListeners.add(listener)
+    return () => this.changeListeners.delete(listener)
+  }
+
+  private emitChange(): void {
+    for (const listener of this.changeListeners) {
+      try {
+        listener()
+      } catch {
+        /* a bad listener must not break persistence */
+      }
+    }
   }
 
   private readFromDisk(): AppData {
@@ -125,6 +147,7 @@ export class Store {
     this.reloadIfStale()
     const result = fn(this.state)
     this.writeToDisk(this.state)
+    this.emitChange()
     return result
   }
 

@@ -5,6 +5,10 @@ import { join } from 'path'
 
 /** Base data directory: ~/Library/Application Support/loop (macOS). */
 export function dataDir(): string {
+  // LOOP_DATA_DIR lets tests (and advanced users) redirect storage off the real path.
+  if (process.env.LOOP_DATA_DIR) {
+    return process.env.LOOP_DATA_DIR
+  }
   // We deliberately use a fixed path (not app.getPath) so the daemon — which runs
   // outside Electron — resolves the exact same directory as the app.
   return join(homedir(), 'Library', 'Application Support', 'loop')

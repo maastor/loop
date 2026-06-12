@@ -1,18 +1,21 @@
 // main/index.ts — Electron main-process entry: app lifecycle, IPC wiring,
 // window + tray, and the in-app scheduler (active only when the daemon is not installed).
 import { watch, type FSWatcher } from 'fs'
+import { basename } from 'path'
 import { app, BrowserWindow, powerMonitor } from 'electron'
 import { electronApp } from '@electron-toolkit/utils'
 import { Store } from '@core/persistence'
 import { Scheduler, STALE_RUN_MS } from '@core/scheduler'
-import { dataFile } from '@core/paths'
+import { dataDir, dataFile } from '@core/paths'
 import { createMainWindow, showMainWindow } from './window'
 import { registerIpcHandlers, broadcastData } from './ipc'
 import { createTray } from './tray'
+import { startAutoChecks } from './updater'
 
 let store: Store
 let scheduler: Scheduler | null = null
 let watcher: FSWatcher | null = null
+let broadcastTimer: NodeJS.Timeout | null = null
 
 // Log otherwise-silent failures so they're diagnosable from the daemon/app logs.
 process.on('unhandledRejection', (reason) => {
@@ -26,23 +29,42 @@ function broadcast(): void {
   broadcastData(store)
 }
 
-/** Watch the data file so changes written by the daemon reach the renderer live. */
-function startDataFileWatch(): void {
-  try {
-    let debounce: NodeJS.Timeout | null = null
-    watcher = watch(dataFile(), () => {
-      if (debounce) {
-        clearTimeout(debounce)
+/** Coalesce bursts of changes (e.g. streaming transcript updates) into one broadcast. */
+function scheduleBroadcast(): void {
+  if (broadcastTimer) {
+    clearTimeout(broadcastTimer)
+  }
+  broadcastTimer = setTimeout(() => broadcast(), 60)
+}
+
+/**
+ * Keep the renderer in sync from two sources:
+ *  1. The Store's own change events — covers every mutation made in THIS process
+ *     (manual runs, the in-app scheduler's streaming/completion updates, settings…).
+ *  2. A watch on the data DIRECTORY — covers writes by the standalone daemon. We watch
+ *     the directory, not the file: `fs.watch(file)` goes deaf after the first atomic
+ *     rename (the inode it was watching is replaced), so file-level watching silently
+ *     stops delivering daemon updates after one write.
+ */
+function startSync(): void {
+  store.onChange(() => scheduleBroadcast())
+  const file = basename(dataFile())
+  const attach = (): void => {
+    watcher = watch(dataDir(), (_event, name) => {
+      if (!name || name === file) {
+        scheduleBroadcast()
       }
-      debounce = setTimeout(() => broadcast(), 200)
     })
+  }
+  try {
+    attach()
   } catch {
-    // The file may not exist yet on very first launch; Store creates it, retry once.
+    // The data dir may not exist on the very first launch; Store creates it — retry once.
     setTimeout(() => {
       try {
-        watcher = watch(dataFile(), () => broadcast())
+        attach()
       } catch {
-        /* give up; renderer still gets local-mutation broadcasts */
+        /* give up; in-process changes still broadcast via store.onChange */
       }
     }, 1000)
   }
@@ -85,8 +107,10 @@ if (!gotLock) {
     registerIpcHandlers({ store, broadcast, reconcileScheduler })
     createMainWindow()
     createTray({ store, showWindow: showMainWindow })
-    startDataFileWatch()
+    startSync()
     reconcileScheduler()
+    // Notify the user when a newer release is published (assisted update — see updater.ts).
+    startAutoChecks()
 
     // The 60s tick is paused while the machine sleeps; on wake, evaluate immediately so
     // a routine missed during sleep fires (within its grace window) without a 60s lag.
