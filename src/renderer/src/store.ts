@@ -1,0 +1,103 @@
+// renderer/src/store.ts — app state backed by the main process over IPC.
+import { create } from 'zustand'
+import type { Routine, Run, Tweaks, Settings, AppData } from '@shared/types'
+import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
+
+interface LoopState {
+  routines: Routine[]
+  runs: Run[]
+  tweaks: Tweaks
+  settings: Settings
+  daemon: DaemonStatus
+  loaded: boolean
+
+  load: () => Promise<void>
+  applyData: (data: AppData) => void
+
+  createRoutine: (input: RoutineCreateInput) => Promise<Routine>
+  updateRoutine: (routine: Routine) => Promise<Routine>
+  deleteRoutine: (id: string) => Promise<void>
+  toggleRoutine: (id: string) => Promise<void>
+  runNow: (id: string) => Promise<void>
+
+  setTweak: <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => Promise<void>
+  setPausedAll: (paused: boolean) => Promise<void>
+  setDaemonEnabled: (enabled: boolean) => Promise<void>
+}
+
+export const useStore = create<LoopState>((set, get) => ({
+  routines: [],
+  runs: [],
+  tweaks: { accent: '#E8703F', layout: 'rows', density: 'comfortable' },
+  settings: { daemonEnabled: false, pausedAll: false },
+  daemon: { installed: false, loaded: false },
+  loaded: false,
+
+  load: async () => {
+    const [routines, runs, tweaks, settings, daemon] = await Promise.all([
+      window.api.routines.list(),
+      window.api.runs.list(),
+      window.api.tweaks.get(),
+      window.api.settings.get(),
+      window.api.daemon.status()
+    ])
+    set({ routines, runs, tweaks, settings, daemon, loaded: true })
+  },
+
+  applyData: (data) => {
+    set({
+      routines: data.routines,
+      runs: [...data.runs].sort(
+        (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
+      ),
+      tweaks: data.tweaks,
+      settings: data.settings
+    })
+  },
+
+  createRoutine: async (input) => {
+    const r = await window.api.routines.create(input)
+    await get().load()
+    return r
+  },
+  updateRoutine: async (routine) => {
+    const r = await window.api.routines.update(routine)
+    await get().load()
+    return r
+  },
+  deleteRoutine: async (id) => {
+    await window.api.routines.delete(id)
+    await get().load()
+  },
+  toggleRoutine: async (id) => {
+    await window.api.routines.toggle(id)
+    await get().load()
+  },
+  runNow: async (id) => {
+    await window.api.routines.runNow(id)
+    await get().load()
+  },
+
+  setTweak: async (key, value) => {
+    const tweaks = await window.api.tweaks.set({ [key]: value })
+    set({ tweaks })
+  },
+  setPausedAll: async (paused) => {
+    const settings = await window.api.settings.set({ pausedAll: paused })
+    set({ settings })
+  },
+  setDaemonEnabled: async (enabled) => {
+    const daemon = enabled
+      ? await window.api.daemon.install()
+      : await window.api.daemon.uninstall()
+    const settings = await window.api.settings.set({ daemonEnabled: enabled })
+    set({ daemon, settings })
+  }
+}))
+
+/** Wire the main-process "data changed" push into the store. Call once at startup. */
+export function subscribeToDataChanges(): () => void {
+  return window.api.onDataChanged((data) => {
+    useStore.getState().applyData(data)
+  })
+}

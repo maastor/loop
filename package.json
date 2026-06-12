@@ -1,0 +1,43 @@
+{
+  "name": "loop",
+  "version": "0.1.0",
+  "description": "Claude Code Routines Manager — schedule, run, and track headless Claude Code sessions",
+  "author": "loop",
+  "main": "./out/main/index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "lint": "echo \"(lint placeholder)\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pack": "npm run build && electron-builder --dir --config config/electron-builder.config.cjs",
+    "dist:mac": "npm run build && electron-builder --mac --config config/electron-builder.config.cjs"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8",
+    "zustand": "^5.0.2"
+  }
+}
