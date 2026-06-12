@@ -71,10 +71,7 @@ Add a channel constant in `shared/ipc.ts` → a handler in `main/ipc.ts` (`ipcMa
 
 ## Conventions
 
-- The UI is a faithful port of the design prototype in `project/` (dark, terminal-styled). `src/renderer/src/theme.css` is the design's CSS ported verbatim — reuse its classes; don't restyle. `project/Claude Routines.html` + `project/app/*.jsx` are the visual/behavioral reference.
+- The UI is a faithful port of the original design prototype, which lives on the **`design-archive`** branch (`project/Claude Routines.html` + `project/app/*.jsx`), not on `main`. `src/renderer/src/theme.css` is that design's CSS ported verbatim — reuse its classes; don't restyle.
+- Lint/format: `oxlint` (correctness + curated TS/React/unicorn rules; `.oxlintrc.json`) and `oxfmt` (single quotes, no semicolons, 100 cols; `.oxfmtrc.json`). Run `npm run lint` and `npm run format`. Don't disable `max-lines` — split the file instead.
 - DMGs are **unsigned / ad-hoc signed** (no Apple cert in CI). Do not set `mac.identity: null` — that disables ad-hoc signing and makes arm64 launch as "damaged". Downloaded builds need `xattr -dr com.apple.quarantine` or right-click → Open. See `BUILD.md`.
 - Releases: pushing a `vX.Y.Z` tag triggers `.github/workflows/build.yml` to build the DMGs and attach them to a GitHub Release. Bump `version` in **both** `package.json` and `package-lock.json` (root) or `npm ci` fails in CI.
-
-```
-
-```
