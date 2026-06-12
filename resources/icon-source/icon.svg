@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Loop app icon: dark rounded-rect background with an orange terminal chevron -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26241f"/>
+      <stop offset="1" stop-color="#1a1916"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F08A5D"/>
+      <stop offset="1" stop-color="#E8703F"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="208" ry="208" fill="url(#bg)"/>
+  <rect x="64" y="64" width="896" height="896" rx="208" ry="208" fill="none" stroke="#3a3833" stroke-width="4"/>
+  <!-- terminal chevron: > -->
+  <path d="M 360 336 L 560 512 L 360 688"
+        fill="none" stroke="url(#accent)" stroke-width="72"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- prompt underscore / spark -->
+  <rect x="600" y="640" width="184" height="56" rx="28" ry="28" fill="url(#accent)"/>
+</svg>
