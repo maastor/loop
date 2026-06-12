@@ -2,7 +2,7 @@ import './theme.css'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-import { useStore, subscribeToDataChanges } from './store'
+import { useStore, subscribeToDataChanges, subscribeToUpdateStatus } from './store'
 
 // Last-resort visibility for otherwise-silent failures in the renderer.
 window.addEventListener('unhandledrejection', (e) => {
@@ -18,7 +18,11 @@ function Root(): React.JSX.Element {
   React.useEffect(() => {
     void useStore.getState().load()
     const unsub = subscribeToDataChanges()
-    return unsub
+    const unsubUpdate = subscribeToUpdateStatus()
+    return () => {
+      unsub()
+      unsubUpdate()
+    }
   }, [])
   if (!loaded) {
     return <div style={{ padding: 40, color: 'var(--text-3)' }}>Loading…</div>

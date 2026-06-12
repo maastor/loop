@@ -20,8 +20,12 @@ export const IPC = {
   daemonUninstall: 'daemon:uninstall',
   selectDirectory: 'dialog:selectDirectory',
   openWindow: 'app:openWindow',
+  updateCheck: 'update:check',
+  updateStart: 'update:start',
+  updateOpenRelease: 'update:openRelease',
   // main → renderer push
-  dataChanged: 'data:changed'
+  dataChanged: 'data:changed',
+  updateStatus: 'update:status'
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]
