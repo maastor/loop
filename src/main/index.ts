@@ -10,6 +10,7 @@ import { dataDir, dataFile } from '@core/paths'
 import { createMainWindow, showMainWindow } from './window'
 import { registerIpcHandlers, broadcastData } from './ipc'
 import { createTray } from './tray'
+import { startAutoChecks } from './updater'
 
 let store: Store
 let scheduler: Scheduler | null = null
@@ -108,6 +109,8 @@ if (!gotLock) {
     createTray({ store, showWindow: showMainWindow })
     startSync()
     reconcileScheduler()
+    // Notify the user when a newer release is published (assisted update — see updater.ts).
+    startAutoChecks()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {

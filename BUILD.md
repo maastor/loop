@@ -65,6 +65,20 @@ xattr -dr com.apple.quarantine /Applications/Loop.app
 For a fully clean install with no warning you'd need an Apple Developer ID
 certificate + notarization; build locally with your own credentials in that case.
 
+## Auto-update
+
+Loop checks the GitHub Releases feed (`maxi-scala/loop`) on launch and every 6h.
+When a newer release is published it surfaces a banner in the sidebar and an
+**Updates** section in Settings. Accepting downloads the architecture-matched
+`.dmg` to `~/Downloads` and opens it — you drag Loop to Applications to finish.
+
+This is an **assisted** update, not a seamless in-place one. A fully automatic
+"download → restart → done" flow (via `electron-updater` + Squirrel.Mac) requires
+a Developer ID signature + notarization: on macOS, Squirrel validates the
+downloaded update's code signature against the running app and refuses to apply
+it for an unsigned/ad-hoc build. Once a Developer ID cert is wired into CI, the
+updater module (`src/main/updater.ts`) can be swapped for `electron-updater`.
+
 ## App icon
 
 The app icon lives at `resources/build/icon.icns`. It is generated from

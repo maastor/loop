@@ -1,6 +1,6 @@
 // renderer/src/store.ts — app state backed by the main process over IPC.
 import { create } from 'zustand'
-import type { Routine, Run, Tweaks, Settings, AppData } from '@shared/types'
+import type { Routine, Run, Tweaks, Settings, AppData, UpdateStatus } from '@shared/types'
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
 
 type LoopState = {
@@ -9,6 +9,8 @@ type LoopState = {
   tweaks: Tweaks
   settings: Settings
   daemon: DaemonStatus
+  /** Runtime updater state — NOT part of persisted AppData, so applyData leaves it alone. */
+  update: UpdateStatus
   loaded: boolean
   loadError: string | null
 
@@ -24,6 +26,11 @@ type LoopState = {
   setTweak: <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => Promise<void>
   setPausedAll: (paused: boolean) => Promise<void>
   setDaemonEnabled: (enabled: boolean) => Promise<void>
+
+  applyUpdateStatus: (status: UpdateStatus) => void
+  checkUpdate: () => Promise<void>
+  startUpdate: () => Promise<void>
+  openRelease: () => Promise<void>
 }
 
 export const useStore = create<LoopState>((set, get) => ({
@@ -32,6 +39,7 @@ export const useStore = create<LoopState>((set, get) => ({
   tweaks: { accent: '#E8703F', layout: 'rows', density: 'comfortable' },
   settings: { daemonEnabled: false, pausedAll: false },
   daemon: { installed: false, loaded: false },
+  update: { phase: 'idle', info: null },
   loaded: false,
   loadError: null,
 
@@ -97,6 +105,20 @@ export const useStore = create<LoopState>((set, get) => ({
     const daemon = enabled ? await window.api.daemon.install() : await window.api.daemon.uninstall()
     const settings = await window.api.settings.set({ daemonEnabled: enabled })
     set({ daemon, settings })
+  },
+
+  applyUpdateStatus: (update) => set({ update }),
+  checkUpdate: async () => {
+    set({ update: { phase: 'checking', info: get().update.info } })
+    const status = await window.api.update.check()
+    set({ update: status })
+  },
+  startUpdate: async () => {
+    // Progress + final phase arrive via the update:status push (applyUpdateStatus).
+    await window.api.update.start()
+  },
+  openRelease: async () => {
+    await window.api.update.openRelease()
   }
 }))
 
@@ -104,5 +126,12 @@ export const useStore = create<LoopState>((set, get) => ({
 export function subscribeToDataChanges(): () => void {
   return window.api.onDataChanged((data) => {
     useStore.getState().applyData(data)
+  })
+}
+
+/** Wire the updater status push into the store. Call once at startup. */
+export function subscribeToUpdateStatus(): () => void {
+  return window.api.update.onStatus((status) => {
+    useStore.getState().applyUpdateStatus(status)
   })
 }

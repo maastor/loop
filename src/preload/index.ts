@@ -1,7 +1,7 @@
 // preload/index.ts — context bridge: the audited contract between renderer and main.
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '@shared/ipc'
-import type { AppData } from '@shared/types'
+import type { AppData, UpdateStatus } from '@shared/types'
 import type { LoopApi } from './api-types'
 
 const api: LoopApi = {
@@ -33,6 +33,16 @@ const api: LoopApi = {
   },
   app: {
     openWindow: () => ipcRenderer.invoke(IPC.openWindow)
+  },
+  update: {
+    check: () => ipcRenderer.invoke(IPC.updateCheck),
+    start: () => ipcRenderer.invoke(IPC.updateStart),
+    openRelease: () => ipcRenderer.invoke(IPC.updateOpenRelease),
+    onStatus: (cb: (status: UpdateStatus) => void) => {
+      const listener = (_event: unknown, status: UpdateStatus): void => cb(status)
+      ipcRenderer.on(IPC.updateStatus, listener)
+      return () => ipcRenderer.removeListener(IPC.updateStatus, listener)
+    }
   },
   dialog: {
     selectDirectory: () => ipcRenderer.invoke(IPC.selectDirectory)
