@@ -26,10 +26,12 @@ module.exports = {
   mac: {
     category: 'public.app-category.developer-tools',
     icon: 'resources/build/icon.icns',
-    // CI builds are unsigned: disable code signing so packaging never fails on
-    // a missing identity. See .github/workflows/build.yml (signing/notarization
-    // are intentionally disabled).
-    identity: null,
+    // CI builds are not signed with a Developer ID or notarized (no cert). We do
+    // NOT set `identity: null` because that disables even ad-hoc signing, which
+    // makes the arm64 app fail to launch with "Loop is damaged". Leaving identity
+    // unset lets electron-builder ad-hoc sign (codesign -s -) the arm64 build so
+    // it runs; downloaded copies still carry the quarantine attribute, so users
+    // must right-click → Open once (or run `xattr -dr com.apple.quarantine`).
     target: [{ target: 'dmg', arch: ['arm64', 'x64'] }],
     darkModeSupport: true,
     extendInfo: {

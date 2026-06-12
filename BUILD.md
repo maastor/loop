@@ -44,10 +44,26 @@ the `.dmg` files.
 
 ### Signing & notarization
 
-CI builds are intentionally **unsigned** (`CSC_IDENTITY_AUTO_DISCOVERY=false`
-and `mac.identity: null` in the electron-builder config). On first launch macOS
-Gatekeeper will warn; right-click the app and choose **Open**, or run a signed
-build locally with your own Developer ID credentials.
+CI builds are **not** signed with a Developer ID or notarized (no certificate in
+CI: `CSC_IDENTITY_AUTO_DISCOVERY=false`). electron-builder still **ad-hoc signs**
+the arm64 build so it launches — we deliberately do *not* set `mac.identity: null`,
+because that disables ad-hoc signing and makes Apple Silicon report the app as
+*"Loop is damaged and can't be opened."*
+
+### "Loop is damaged and can't be opened" (downloaded .dmg)
+
+Apps downloaded from the internet get a quarantine attribute. Because this build
+is only ad-hoc signed (not notarized), Gatekeeper blocks it. Fix it one of two ways:
+
+```bash
+# Option A — strip quarantine from the installed app (then open normally):
+xattr -dr com.apple.quarantine /Applications/Loop.app
+
+# Option B — right-click Loop.app in Finder → Open → Open (only needed once).
+```
+
+For a fully clean install with no warning you'd need an Apple Developer ID
+certificate + notarization; build locally with your own credentials in that case.
 
 ## App icon
 
