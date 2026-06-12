@@ -1,6 +1,6 @@
 {
   "name": "loop",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Claude Code Routines Manager — schedule, run, and track headless Claude Code sessions",
   "license": "MIT",
   "author": "loop",
