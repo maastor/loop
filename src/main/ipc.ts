@@ -15,6 +15,8 @@ export interface IpcDeps {
   store: Store
   /** Called whenever state mutates so the renderer + tray refresh. */
   broadcast: () => void
+  /** Re-sync the in-app scheduler with the daemon state after a daemon toggle. */
+  reconcileScheduler: () => void
 }
 
 /** Manual "Run now": execute via the main process regardless of the daemon. */
@@ -36,7 +38,7 @@ async function runRoutineNow(store: Store, id: string, broadcast: () => void): P
   broadcast()
 }
 
-export function registerIpcHandlers({ store, broadcast }: IpcDeps): void {
+export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: IpcDeps): void {
   ipcMain.handle(IPC.routinesList, () => store.listRoutines())
   ipcMain.handle(IPC.routinesGet, (_e, id: string) => store.getRoutine(id))
 
@@ -102,11 +104,13 @@ export function registerIpcHandlers({ store, broadcast }: IpcDeps): void {
   ipcMain.handle(IPC.daemonStatus, () => getDaemonStatus())
   ipcMain.handle(IPC.daemonInstall, async () => {
     const status = await installDaemon()
+    reconcileScheduler()
     broadcast()
     return status
   })
   ipcMain.handle(IPC.daemonUninstall, async () => {
     const status = await uninstallDaemon()
+    reconcileScheduler()
     broadcast()
     return status
   })

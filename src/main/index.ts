@@ -39,8 +39,14 @@ function startDataFileWatch(): void {
   }
 }
 
-/** Start the in-app scheduler only when the background daemon is not handling scheduling. */
-function startInAppSchedulerIfNeeded(): void {
+/**
+ * Reconcile the in-app scheduler with the daemon state: run the in-app scheduler only
+ * when the background daemon is not installed. Safe to call repeatedly — it is invoked
+ * at startup and again after the daemon is toggled at runtime (via the IPC handlers) so
+ * the change takes effect without restarting the app.
+ */
+function reconcileScheduler(): void {
+  if (!store) return
   const { installed } = getDaemonStatus()
   if (installed) {
     scheduler?.stop()
@@ -65,11 +71,11 @@ if (!gotLock) {
     electronApp.setAppUserModelId('com.loop.routines')
 
     store = new Store()
-    registerIpcHandlers({ store, broadcast })
+    registerIpcHandlers({ store, broadcast, reconcileScheduler })
     createMainWindow()
     createTray({ store, showWindow: showMainWindow })
     startDataFileWatch()
-    startInAppSchedulerIfNeeded()
+    reconcileScheduler()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
