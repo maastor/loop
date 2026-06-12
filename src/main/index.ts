@@ -1,7 +1,7 @@
 // main/index.ts — Electron main-process entry: app lifecycle, IPC wiring,
 // window + tray, and the in-app scheduler (active only when the daemon is not installed).
 import { watch, type FSWatcher } from 'fs'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, powerMonitor } from 'electron'
 import { electronApp } from '@electron-toolkit/utils'
 import { Store } from '@core/persistence'
 import { Scheduler, STALE_RUN_MS } from '@core/scheduler'
@@ -87,6 +87,12 @@ if (!gotLock) {
     createTray({ store, showWindow: showMainWindow })
     startDataFileWatch()
     reconcileScheduler()
+
+    // The 60s tick is paused while the machine sleeps; on wake, evaluate immediately so
+    // a routine missed during sleep fires (within its grace window) without a 60s lag.
+    powerMonitor.on('resume', () => {
+      void scheduler?.tick()
+    })
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {

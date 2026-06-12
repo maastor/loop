@@ -53,7 +53,9 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
       dir: input.dir,
       model: input.model,
       schedule: input.schedule,
-      enabled: input.enabled ?? true
+      enabled: input.enabled ?? true,
+      permissionMode: input.permissionMode,
+      missedRunGraceMinutes: input.missedRunGraceMinutes
     }
     const saved = store.upsertRoutine(routine)
     broadcast()
