@@ -42,7 +42,8 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
           <div>
             <div className="settings-label">Pause all routines</div>
             <div className="settings-desc">
-              Temporarily stops all scheduled runs without changing each routine's enabled state.
+              Temporarily stops all scheduled runs without changing each routine&apos;s enabled
+              state.
             </div>
           </div>
           <Toggle value={settings.pausedAll} onChange={(v) => void setPausedAll(v)} />

@@ -3,7 +3,10 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react'
 
 // The store actions are async (await IPC, then set state). Let those deferred
 // updates settle inside act() so React doesn't warn about updates outside act.
-const flush = (): Promise<void> => act(async () => { await Promise.resolve() })
+const flush = (): Promise<void> =>
+  act(async () => {
+    await Promise.resolve()
+  })
 import { useStore } from '@renderer/store'
 import { TweaksPanel } from '@renderer/TweaksPanel'
 import { MenuBar } from '@renderer/MenuBar'

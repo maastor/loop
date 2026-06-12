@@ -21,7 +21,9 @@ function fakeStore(routines: Routine[], runs: Run[] = [], settings?: Partial<Set
     },
     updateRun: (id: string, patch: Partial<Run>) => {
       const i = state.runs.findIndex((r) => r.id === id)
-      if (i === -1) return undefined
+      if (i === -1) {
+        return undefined
+      }
       state.runs[i] = { ...state.runs[i], ...patch }
       return state.runs[i]
     },

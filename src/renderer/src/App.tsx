@@ -15,7 +15,12 @@ import { SettingsScreen } from './screens/Settings'
 import { Editor } from './screens/Editor'
 import type { View, Nav } from './views'
 
-const NAV_ITEMS: { id: View['screen']; label: string; icon: 'routines' | 'calendar' | 'history' | 'settings'; match: View['screen'][] }[] = [
+const NAV_ITEMS: {
+  id: View['screen']
+  label: string
+  icon: 'routines' | 'calendar' | 'history' | 'settings'
+  match: View['screen'][]
+}[] = [
   { id: 'routines', label: 'Routines', icon: 'routines', match: ['routines', 'routine'] },
   { id: 'calendar', label: 'Calendar', icon: 'calendar', match: ['calendar'] },
   { id: 'history', label: 'History', icon: 'history', match: ['history', 'run'] },
@@ -96,7 +101,7 @@ export default function App(): React.JSX.Element {
             <button
               key={n.id}
               type="button"
-              className={'nav-item' + (n.match.includes(view.screen) ? ' active' : '')}
+              className={`nav-item${n.match.includes(view.screen) ? ' active' : ''}`}
               onClick={() => setView({ screen: n.id } as View)}
             >
               <Icon name={n.icon} size={15} />
@@ -134,7 +139,9 @@ export default function App(): React.JSX.Element {
 
       {editorOpen ? (
         <Editor
-          routine={editorRoutineId ? routines.find((r) => r.id === editorRoutineId) ?? null : null}
+          routine={
+            editorRoutineId ? (routines.find((r) => r.id === editorRoutineId) ?? null) : null
+          }
           onClose={closeEditor}
         />
       ) : null}

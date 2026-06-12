@@ -49,24 +49,32 @@ src/renderer/ React UI. store.ts (zustand, mirrors main over IPC), App.tsx (shel
 ```
 
 ### Data flow & persistence
-- All state lives in **one atomic JSON file** at `~/Library/Application Support/loop/loop-data.json` (`core/persistence.ts`, `Store`), with rotating backups. The path is hardcoded (not `app.getPath`) so the daemon and the app resolve the *same* file.
+
+- All state lives in **one atomic JSON file** at `~/Library/Application Support/loop/loop-data.json` (`core/persistence.ts`, `Store`), with rotating backups. The path is hardcoded (not `app.getPath`) so the daemon and the app resolve the _same_ file.
 - The main process owns the authoritative `Store`. The renderer holds a zustand mirror: it loads via IPC and re-syncs on a `data:changed` push that main broadcasts after every mutation (and on a `fs.watch` of the data file, so daemon-written changes reach the UI live).
 - Because main **and** daemon may both write, every `Store` mutation does **reload-from-disk → mutate → atomic write** (`mtime`-based `reloadIfStale`) to avoid clobbering.
 - Screens read from `useStore` directly and mutate via store actions; they receive only `{ nav, now, openEditor }` (`ScreenProps`). Adding a screen = add a `View` variant + a case in `App.tsx`.
 
 ### Execution (`core/claude-runner.ts`)
+
 `runClaude` spawns the real CLI: `claude -p <prompt> --output-format stream-json --verbose --model <id>` with `cwd` = the routine's dir (`~` expanded). It parses the NDJSON event stream into transcript entries (assistant text / tool_use / tool_result) and a final `result` event → summary + cost + tokens + duration, deriving "changes" (edits/commits/PRs) from tool usage. `resolveClaudeCommand()` probes common install paths and augments `PATH` because GUI/daemon processes start with a sparse environment.
 
 ### Scheduling model (subtle — most bugs live here)
+
 - `Scheduler` (`core/scheduler.ts`) is a `setInterval` tick (60s). Each tick fires every enabled routine whose **latest schedule occurrence at-or-before now** is within a 30-min grace window and not already satisfied (deduped by `Run.scheduledFor` ISO string).
 - **The in-app scheduler runs whenever the app is open**, regardless of the daemon. The launchd daemon covers the fully-quit case. Both share the data file; the `scheduledFor` dedup prevents double-runs across processes.
 - A run stuck in `status: 'running'` (from a crashed/quit process) must NOT block scheduling: the running-guard ignores runs older than `STALE_RUN_MS` (2h), and `Store.reconcileStaleRuns()` is called at app + daemon startup to fail them. Manual "Run now" bypasses scheduling entirely (always works) — keep this asymmetry in mind when debugging "scheduled never fires but manual does".
 
 ### IPC pattern
+
 Add a channel constant in `shared/ipc.ts` → a handler in `main/ipc.ts` (`ipcMain.handle`) that calls `broadcast()` after mutations → a binding in `preload/index.ts` → a typed method in `preload/api-types.ts` (`window.api.*`). Renderer calls `window.api.<ns>.<method>()`.
 
 ## Conventions
+
 - The UI is a faithful port of the design prototype in `project/` (dark, terminal-styled). `src/renderer/src/theme.css` is the design's CSS ported verbatim — reuse its classes; don't restyle. `project/Claude Routines.html` + `project/app/*.jsx` are the visual/behavioral reference.
 - DMGs are **unsigned / ad-hoc signed** (no Apple cert in CI). Do not set `mac.identity: null` — that disables ad-hoc signing and makes arm64 launch as "damaged". Downloaded builds need `xattr -dr com.apple.quarantine` or right-click → Open. See `BUILD.md`.
 - Releases: pushing a `vX.Y.Z` tag triggers `.github/workflows/build.yml` to build the DMGs and attach them to a GitHub Release. Bump `version` in **both** `package.json` and `package-lock.json` (root) or `npm ci` fails in CI.
+
+```
+
 ```

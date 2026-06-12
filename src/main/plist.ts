@@ -1,7 +1,7 @@
 // main/plist.ts — pure LaunchAgent plist XML builder.
 //
 // Factored out of launchd.ts so it can be unit-tested without importing Electron.
-export interface PlistOptions {
+export type PlistOptions = {
   label: string
   electronPath: string
   daemonScript: string
@@ -16,7 +16,12 @@ function xmlEscape(s: string): string {
  * Returns the LaunchAgent plist XML. Side-effect-free. The daemon is launched as Node
  * via the Electron binary (ELECTRON_RUN_AS_NODE=1) so it shares the app's runtime.
  */
-export function buildPlistXml({ label, electronPath, daemonScript, logPath }: PlistOptions): string {
+export function buildPlistXml({
+  label,
+  electronPath,
+  daemonScript,
+  logPath
+}: PlistOptions): string {
   // PATH must include common locations for the `claude` CLI; launchd gives a minimal PATH.
   const path = '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin:~/.local/bin'
   return `<?xml version="1.0" encoding="UTF-8"?>

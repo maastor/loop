@@ -107,7 +107,7 @@ for (let y = 0; y < H; y++) {
         color = over(color, BORDER, borderCov * cardCov)
       }
       // accent gradient color for shapes (diagonal)
-      const t = Math.max(0, Math.min(1, ((dx - 336) + (dy - 336)) / 700))
+      const t = Math.max(0, Math.min(1, (dx - 336 + (dy - 336)) / 700))
       const acc = lerp(ACC_A, ACC_B, t)
 
       // chevron: min distance to the two segments
@@ -115,12 +115,16 @@ for (let y = 0; y < H; y++) {
       const d2 = sdSegment(dx, dy, chev[1][0], chev[1][1], chev[2][0], chev[2][1])
       const dChev = Math.min(d1, d2) - chevW / 2
       const chevCov = cov(dChev, aa)
-      if (chevCov > 0) color = over(color, acc, chevCov)
+      if (chevCov > 0) {
+        color = over(color, acc, chevCov)
+      }
 
       // prompt bar
       const dPrompt = sdRoundRect(dx, dy, promptCx, promptCy, promptHw, promptHh, promptR)
       const promptCov = cov(dPrompt, aa)
-      if (promptCov > 0) color = over(color, acc, promptCov)
+      if (promptCov > 0) {
+        color = over(color, acc, promptCov)
+      }
     }
 
     const i = (y * W + x) * 4
@@ -136,7 +140,9 @@ function crc32(buf) {
   let c = ~0
   for (let i = 0; i < buf.length; i++) {
     c ^= buf[i]
-    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1))
+    for (let k = 0; k < 8; k++) {
+      c = (c >>> 1) ^ (0xedb88320 & -(c & 1))
+    }
   }
   return ~c >>> 0
 }
@@ -164,6 +170,11 @@ for (let y = 0; y < H; y++) {
   buf.copy(raw, y * (W * 4 + 1) + 1, y * W * 4, (y + 1) * W * 4)
 }
 const idat = zlib.deflateSync(raw, { level: 9 })
-const png = Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', Buffer.alloc(0))])
+const png = Buffer.concat([
+  sig,
+  chunk('IHDR', ihdr),
+  chunk('IDAT', idat),
+  chunk('IEND', Buffer.alloc(0))
+])
 fs.writeFileSync(OUT, png)
-console.log('wrote', OUT, SIZE + 'x' + SIZE, png.length + ' bytes')
+console.log('wrote', OUT, `${SIZE}x${SIZE}`, `${png.length} bytes`)

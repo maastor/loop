@@ -2,14 +2,7 @@
 // summary + changes, transcript. Ported from project/app/screens-history.jsx (RunDetailScreen).
 import React from 'react'
 import { useStore } from '../store'
-import {
-  ScreenHead,
-  StatusBadge,
-  Transcript,
-  Icon,
-  ModelChip,
-  ChangeItem
-} from '../components'
+import { ScreenHead, StatusBadge, Transcript, Icon, ModelChip, ChangeItem } from '../components'
 import { fmtDateTime, fmtDur, fmtCost, fmtTokens } from '@shared/format'
 import type { ScreenProps, View } from '../views'
 
@@ -20,7 +13,9 @@ export function RunDetailScreen({
 }: ScreenProps & { runId: string; from?: View }): React.JSX.Element {
   const run = useStore((s) => s.runs.find((r) => r.id === runId))
   const routine = useStore((s) => s.routines.find((r) => r.id === run?.routineId))
-  if (!run) return <div className="screen stub-note">Run not found.</div>
+  if (!run) {
+    return <div className="screen stub-note">Run not found.</div>
+  }
 
   const back: View = from || { screen: 'history' }
   const backLabels: Partial<Record<View['screen'], string>> = {
@@ -39,10 +34,7 @@ export function RunDetailScreen({
         </button>
       </div>
 
-      <ScreenHead
-        title={routine ? routine.name : 'Deleted routine'}
-        sub={fmtDateTime(run.start)}
-      >
+      <ScreenHead title={routine ? routine.name : 'Deleted routine'} sub={fmtDateTime(run.start)}>
         <StatusBadge status={run.status} />
       </ScreenHead>
 

@@ -65,9 +65,21 @@ describe('buildMenuModel', () => {
 
   it('lists at most 2 next-up enabled routines sorted by next run', () => {
     const routines = [
-      routine({ id: 'a', name: 'A', schedule: { freq: 'daily', time: '12:00', days: [], everyHours: 0 } }),
-      routine({ id: 'b', name: 'B', schedule: { freq: 'daily', time: '10:00', days: [], everyHours: 0 } }),
-      routine({ id: 'c', name: 'C', schedule: { freq: 'daily', time: '11:00', days: [], everyHours: 0 } }),
+      routine({
+        id: 'a',
+        name: 'A',
+        schedule: { freq: 'daily', time: '12:00', days: [], everyHours: 0 }
+      }),
+      routine({
+        id: 'b',
+        name: 'B',
+        schedule: { freq: 'daily', time: '10:00', days: [], everyHours: 0 }
+      }),
+      routine({
+        id: 'c',
+        name: 'C',
+        schedule: { freq: 'daily', time: '11:00', days: [], everyHours: 0 }
+      }),
       routine({ id: 'd', name: 'D', enabled: false })
     ]
     const m = buildMenuModel(routines, [], settings(), NOW)

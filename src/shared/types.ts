@@ -8,7 +8,7 @@ export type ScheduleFreq = 'daily' | 'weekdays' | 'weekly' | 'hourly'
 /** Day-of-week index, 0 = Sunday … 6 = Saturday (matches Date.getDay()). */
 export type DayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
-export interface Schedule {
+export type Schedule = {
   freq: ScheduleFreq
   /** "HH:MM" 24h. Ignored for hourly. */
   time: string
@@ -18,7 +18,7 @@ export interface Schedule {
   everyHours: number
 }
 
-export interface Routine {
+export type Routine = {
   id: string
   name: string
   prompt: string
@@ -33,14 +33,14 @@ export type RunStatus = 'running' | 'success' | 'failed'
 
 export type ChangeType = 'edit' | 'commit' | 'pr' | 'label'
 
-export interface Change {
+export type Change = {
   t: ChangeType
   x: string
 }
 
 export type TranscriptRole = 'user' | 'assistant' | 'tool' | 'result'
 
-export interface TranscriptEntry {
+export type TranscriptEntry = {
   role: TranscriptRole
   text?: string
   /** For tool entries: the tool name (e.g. "Bash"). */
@@ -51,7 +51,7 @@ export interface TranscriptEntry {
   err?: boolean
 }
 
-export interface Run {
+export type Run = {
   id: string
   routineId: string
   /** ISO timestamp. */
@@ -73,13 +73,13 @@ export interface Run {
 export type LayoutVariant = 'rows' | 'cards' | 'table'
 export type Density = 'compact' | 'comfortable'
 
-export interface Tweaks {
+export type Tweaks = {
   accent: string
   layout: LayoutVariant
   density: Density
 }
 
-export interface Settings {
+export type Settings = {
   /** Whether routines should run in the background via the launchd daemon. */
   daemonEnabled: boolean
   /** Global pause — disables all scheduling without touching per-routine enabled flags. */
@@ -87,7 +87,7 @@ export interface Settings {
 }
 
 /** The full persisted application state (one JSON file). */
-export interface AppData {
+export type AppData = {
   version: number
   routines: Routine[]
   runs: Run[]
@@ -95,7 +95,7 @@ export interface AppData {
   settings: Settings
 }
 
-export interface ModelMeta {
+export type ModelMeta = {
   id: ModelId
   label: string
   desc: string

@@ -31,7 +31,11 @@ export const LAUNCH_AGENT_LABEL = 'com.loop.routines.daemon'
 
 /** Expand a leading ~ to the user's home directory. */
 export function expandHome(p: string): string {
-  if (p === '~') return homedir()
-  if (p.startsWith('~/')) return join(homedir(), p.slice(2))
+  if (p === '~') {
+    return homedir()
+  }
+  if (p.startsWith('~/')) {
+    return join(homedir(), p.slice(2))
+  }
   return p
 }

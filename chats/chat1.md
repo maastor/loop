@@ -6,9 +6,10 @@ _Started 2026-06-12 10:13 UTC_
 
 ## User
 
-This should be a Mac OS application for managing Routines for Claude code. 
+This should be a Mac OS application for managing Routines for Claude code.
 Should be Electron Mac OS APP.
 Functions:
+
 - Create scheduled routines with prompts
 - Manage Routines
 - See Calendar of runned routines
@@ -33,6 +34,7 @@ _[tool: questions_v2]_
 ## User
 
 Questions answered:
+
 - visual_direction: Claude Code aesthetic — dark, terminal-inspired, warm orange accent
 - theme: Dark only
 - fidelity: Hi-fi clickable prototype — navigate all screens, create/edit routines actually works
@@ -119,4 +121,3 @@ No issues found
 ## Assistant
 
 Verified — the editor sheet opens fully visible and the week view reads cleanly. The app is ready to explore. Want any changes — default layout (rows/cards/table), more sample routines, or extra screens like settings/notifications?
-

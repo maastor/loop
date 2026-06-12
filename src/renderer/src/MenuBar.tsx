@@ -20,12 +20,18 @@ export function MenuBar({ nav, now }: { nav: Nav; now: Date }): React.JSX.Elemen
 
   // Close the dropdown on outside click / Escape so it behaves like a real menu.
   React.useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
     const onDown = (e: MouseEvent): void => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
     }
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
     }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
@@ -61,7 +67,7 @@ export function MenuBar({ nav, now }: { nav: Nav; now: Date }): React.JSX.Elemen
     >
       <button
         type="button"
-        className={'mb-status' + (open ? ' open' : '')}
+        className={`mb-status${open ? ' open' : ''}`}
         onClick={() => setOpen((v) => !v)}
         title="Loop quick status"
       >

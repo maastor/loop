@@ -12,7 +12,7 @@ export type View =
 export type Nav = (v: View) => void
 
 /** Props passed to every screen. Screens read routines/runs from the store directly. */
-export interface ScreenProps {
+export type ScreenProps = {
   nav: Nav
   now: Date
   /** Open the create/edit routine sheet. Pass a routineId to edit, omit to create. */

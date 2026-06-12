@@ -3,13 +3,7 @@
 import React from 'react'
 import { useStore } from '../store'
 import { Btn, Icon, Seg } from '../components'
-import {
-  parseNL,
-  scheduleToNL,
-  describeSchedule,
-  computeNextRun,
-  MODELS
-} from '@shared/schedule'
+import { parseNL, scheduleToNL, describeSchedule, computeNextRun, MODELS } from '@shared/schedule'
 import { fmtDateTime } from '@shared/format'
 import type { Routine, Schedule, ModelId } from '@shared/types'
 
@@ -42,9 +36,7 @@ export function Editor({
   const [dir, setDir] = React.useState(routine ? routine.dir : '~')
   const [model, setModel] = React.useState<ModelId>(routine ? routine.model : 'sonnet')
   const [schedule, setSchedule] = React.useState<Schedule>(
-    routine
-      ? { ...routine.schedule }
-      : { freq: 'daily', time: '09:00', days: [1], everyHours: 6 }
+    routine ? { ...routine.schedule } : { freq: 'daily', time: '09:00', days: [1], everyHours: 6 }
   )
   const [nl, setNl] = React.useState(routine ? scheduleToNL(routine.schedule) : '')
   const [nlState, setNlState] = React.useState<NlState>(routine ? 'ok' : 'idle')
@@ -78,7 +70,9 @@ export function Editor({
     const days = schedule.days.includes(d)
       ? schedule.days.filter((x) => x !== d)
       : [...schedule.days, d].sort((a, b) => a - b)
-    if (days.length === 0) return
+    if (days.length === 0) {
+      return
+    }
     patchSchedule({ days })
   }
 
@@ -86,7 +80,9 @@ export function Editor({
   const preview = computeNextRun(schedule, new Date())
 
   const save = async (): Promise<void> => {
-    if (!valid) return
+    if (!valid) {
+      return
+    }
     const edits = {
       name: name.trim(),
       prompt: prompt.trim(),
@@ -94,17 +90,17 @@ export function Editor({
       model,
       schedule
     }
-    if (routine) {
-      await updateRoutine({ ...routine, ...edits })
-    } else {
-      await createRoutine({ ...edits, enabled: true })
-    }
+    await (routine
+      ? updateRoutine({ ...routine, ...edits })
+      : createRoutine({ ...edits, enabled: true }))
     onClose()
   }
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -114,14 +110,18 @@ export function Editor({
 
   const chooseDir = async (): Promise<void> => {
     const picked = await window.api.dialog.selectDirectory()
-    if (picked) setDir(picked)
+    if (picked) {
+      setDir(picked)
+    }
   }
 
   return (
     <div
       className="sheet-backdrop"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
+        if (e.target === e.currentTarget) {
+          onClose()
+        }
       }}
     >
       <div className="sheet" data-screen-label="Routine editor">
@@ -175,12 +175,12 @@ export function Editor({
 
             {!structured ? (
               <div>
-                <div className={'nl-wrap' + (nlState === 'bad' ? ' bad' : '')}>
+                <div className={`nl-wrap${nlState === 'bad' ? ' bad' : ''}`}>
                   <Icon name="clock" size={14} style={{ color: 'var(--text-3)' }} />
                   <input
                     className="input nl-input"
                     value={nl}
-                    placeholder={'try "every weekday at 9am" or "every 6 hours"'}
+                    placeholder='try "every weekday at 9am" or "every 6 hours"'
                     onChange={(e) => onNlChange(e.target.value)}
                   />
                   {nlState === 'ok' ? (
@@ -216,7 +216,7 @@ export function Editor({
                       <button
                         key={d.v}
                         type="button"
-                        className={'day-btn mono' + (schedule.days.includes(d.v) ? ' active' : '')}
+                        className={`day-btn mono${schedule.days.includes(d.v) ? ' active' : ''}`}
                         onClick={() => toggleDay(d.v)}
                       >
                         {d.l}

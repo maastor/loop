@@ -11,9 +11,13 @@ import type { ScreenProps } from '../views'
 
 // ── shared row pieces ────────────────────────────────────────
 function NextRunLabel({ routine, now }: { routine: Routine; now: Date }): React.JSX.Element {
-  if (!routine.enabled) return <span className="mono dim">paused</span>
+  if (!routine.enabled) {
+    return <span className="mono dim">paused</span>
+  }
   const next = computeNextRun(routine.schedule, now)
-  if (!next) return <span className="mono dim">—</span>
+  if (!next) {
+    return <span className="mono dim">—</span>
+  }
   return (
     <span className="mono">
       {relUntil(next, now)} · {fmtTime(next)}
@@ -30,7 +34,9 @@ function LastRunCell({
   now: Date
   onOpen: (id: string) => void
 }): React.JSX.Element {
-  if (!run) return <span className="dim mono">never ran</span>
+  if (!run) {
+    return <span className="dim mono">never ran</span>
+  }
   return (
     <button
       type="button"
@@ -41,7 +47,9 @@ function LastRunCell({
       }}
     >
       <StatusDot status={run.status} size={6} />
-      <span className="mono">{run.status === 'running' ? 'running now' : relTime(run.start, now)}</span>
+      <span className="mono">
+        {run.status === 'running' ? 'running now' : relTime(run.start, now)}
+      </span>
     </button>
   )
 }
@@ -70,7 +78,7 @@ function RunSpark({ runs }: { runs: Run[] }): React.JSX.Element {
   )
 }
 
-interface VariantProps {
+type VariantProps = {
   routines: Routine[]
   runsByRoutine: Record<string, Run[]>
   now: Date
@@ -97,7 +105,7 @@ function RoutineRows({
         return (
           <div
             key={r.id}
-            className={'rt-row' + (r.enabled ? '' : ' off')}
+            className={`rt-row${r.enabled ? '' : ' off'}`}
             onClick={() => onOpen(r.id)}
           >
             <Toggle value={r.enabled} onChange={() => onToggle(r.id)} small />
@@ -151,7 +159,7 @@ function RoutineCards({
         return (
           <div
             key={r.id}
-            className={'rt-card' + (r.enabled ? '' : ' off')}
+            className={`rt-card${r.enabled ? '' : ' off'}`}
             onClick={() => onOpen(r.id)}
           >
             <div className="rt-card-top">
@@ -265,7 +273,9 @@ export function RoutinesScreen({ nav, now, openEditor }: ScreenProps): React.JSX
 
   const runsByRoutine = React.useMemo(() => {
     const m: Record<string, Run[]> = {}
-    for (const run of runs) (m[run.routineId] = m[run.routineId] || []).push(run)
+    for (const run of runs) {
+      ;(m[run.routineId] = m[run.routineId] || []).push(run)
+    }
     return m
   }, [runs])
 

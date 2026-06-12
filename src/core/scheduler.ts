@@ -6,7 +6,7 @@
 // than the grace window are skipped (recorded implicitly by advancing past them).
 import type { Routine, Run } from '@shared/types'
 import { scheduleTimesForDay } from '@shared/schedule'
-import { Store } from './persistence'
+import type { Store } from './persistence'
 import { runClaude, createRunningRun } from './claude-runner'
 
 const DEFAULT_TICK_MS = 60_000
@@ -29,13 +29,15 @@ export function latestOccurrenceAtOrBefore(routine: Routine, now: Date): Date | 
     for (const t of times.slice().reverse()) {
       const [h, m] = t.split(':').map(Number)
       const cand = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m)
-      if (cand <= now) return cand
+      if (cand <= now) {
+        return cand
+      }
     }
   }
   return null
 }
 
-export interface SchedulerOptions {
+export type SchedulerOptions = {
   tickMs?: number
   /** Override executor (used in tests). Defaults to runClaude-backed execution. */
   execute?: (routine: Routine, run: Run, store: Store) => Promise<void>
@@ -85,7 +87,9 @@ export class Scheduler {
   }
 
   start(): void {
-    if (this.timer) return
+    if (this.timer) {
+      return
+    }
     this.log(`scheduler start (tick ${this.tickMs}ms)`)
     // Run an immediate tick, then on the interval.
     void this.tick()
@@ -102,7 +106,9 @@ export class Scheduler {
   /** Evaluate all routines once. Public for tests. */
   async tick(now: Date = new Date()): Promise<string[]> {
     const settings = this.store.getSettings()
-    if (settings.pausedAll) return []
+    if (settings.pausedAll) {
+      return []
+    }
     const routines = this.store.listRoutines().filter((r) => r.enabled)
     const fired: string[] = []
     for (const routine of routines) {
@@ -111,28 +117,39 @@ export class Scheduler {
         void this.dispatch(routine, now)
       }
     }
-    if (fired.length) this.onFire?.(fired)
+    if (fired.length) {
+      this.onFire?.(fired)
+    }
     return fired
   }
 
   private shouldFire(routine: Routine, now: Date): boolean {
-    if (this.inFlight.has(routine.id)) return false
+    if (this.inFlight.has(routine.id)) {
+      return false
+    }
     const occ = latestOccurrenceAtOrBefore(routine, now)
-    if (!occ) return false
+    if (!occ) {
+      return false
+    }
     // Skip occurrences older than the grace window.
-    if (now.getTime() - occ.getTime() > GRACE_MS) return false
+    if (now.getTime() - occ.getTime() > GRACE_MS) {
+      return false
+    }
     const occIso = occ.toISOString()
     const runs = this.store.listRuns(routine.id)
     // Already satisfied this occurrence?
-    if (runs.some((r) => r.scheduledFor === occIso)) return false
+    if (runs.some((r) => r.scheduledFor === occIso)) {
+      return false
+    }
     // Don't pile onto a run that is genuinely still in progress, but ignore stale
     // "running" rows left behind by a crashed/quit process so they can't wedge us.
     if (
       runs.some(
         (r) => r.status === 'running' && now.getTime() - new Date(r.start).getTime() < STALE_RUN_MS
       )
-    )
+    ) {
       return false
+    }
     return true
   }
 

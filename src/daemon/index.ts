@@ -23,7 +23,9 @@ function main(): void {
   log('loop daemon starting')
   const store = new Store()
   const cleaned = store.reconcileStaleRuns(STALE_RUN_MS)
-  if (cleaned) log(`reconciled ${cleaned} stale running run(s)`)
+  if (cleaned) {
+    log(`reconciled ${cleaned} stale running run(s)`)
+  }
   const scheduler = new Scheduler(store, { log })
   scheduler.start()
 

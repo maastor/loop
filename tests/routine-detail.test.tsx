@@ -41,9 +41,19 @@ beforeEach(() => {
       runNow: async () => run
     },
     runs: { list: async () => [run], get: async () => run },
-    tweaks: { get: async () => useStore.getState().tweaks, set: async () => useStore.getState().tweaks },
-    settings: { get: async () => useStore.getState().settings, set: async () => useStore.getState().settings },
-    daemon: { status: async () => ({ installed: false, loaded: false }), install: async () => ({ installed: true, loaded: true }), uninstall: async () => ({ installed: false, loaded: false }) },
+    tweaks: {
+      get: async () => useStore.getState().tweaks,
+      set: async () => useStore.getState().tweaks
+    },
+    settings: {
+      get: async () => useStore.getState().settings,
+      set: async () => useStore.getState().settings
+    },
+    daemon: {
+      status: async () => ({ installed: false, loaded: false }),
+      install: async () => ({ installed: true, loaded: true }),
+      uninstall: async () => ({ installed: false, loaded: false })
+    },
     app: { openWindow: async () => {} },
     onDataChanged: () => () => {}
   }
@@ -61,9 +71,7 @@ describe('RoutineDetailScreen', () => {
       />
     )
     expect(screen.getByText('Nightly dependency audit')).toBeTruthy()
-    expect(
-      screen.getByText('Audit dependencies and open a PR for any safe upgrades.')
-    ).toBeTruthy()
+    expect(screen.getByText('Audit dependencies and open a PR for any safe upgrades.')).toBeTruthy()
   })
 
   it('shows the inline confirm row when Delete routine is clicked', () => {
@@ -77,9 +85,7 @@ describe('RoutineDetailScreen', () => {
     )
     expect(screen.queryByText(/Delete this routine and keep its history/)).toBeNull()
     fireEvent.click(screen.getByText('Delete routine'))
-    expect(
-      screen.getByText('Delete this routine and keep its history?')
-    ).toBeTruthy()
+    expect(screen.getByText('Delete this routine and keep its history?')).toBeTruthy()
   })
 
   it('renders a missing-routine fallback', () => {

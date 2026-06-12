@@ -11,7 +11,7 @@ import type { Routine, Run, Settings } from '@shared/types'
 import { computeNextRun } from '@shared/schedule'
 import { relTime, relUntil, fmtTime } from '@shared/format'
 
-export interface TrayDeps {
+export type TrayDeps = {
   store: Store
   showWindow: () => void
 }
@@ -159,7 +159,9 @@ export function createTray(d: TrayDeps): void {
 }
 
 export function refreshTray(): void {
-  if (!tray || !deps) return
+  if (!tray || !deps) {
+    return
+  }
   try {
     const model = buildMenuModel(
       deps.store.listRoutines(),

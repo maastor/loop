@@ -14,6 +14,14 @@ let store: Store
 let scheduler: Scheduler | null = null
 let watcher: FSWatcher | null = null
 
+// Log otherwise-silent failures so they're diagnosable from the daemon/app logs.
+process.on('unhandledRejection', (reason) => {
+  console.error('[main] unhandled rejection:', reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('[main] uncaught exception:', err)
+})
+
 function broadcast(): void {
   broadcastData(store)
 }
@@ -23,7 +31,9 @@ function startDataFileWatch(): void {
   try {
     let debounce: NodeJS.Timeout | null = null
     watcher = watch(dataFile(), () => {
-      if (debounce) clearTimeout(debounce)
+      if (debounce) {
+        clearTimeout(debounce)
+      }
       debounce = setTimeout(() => broadcast(), 200)
     })
   } catch {
@@ -46,8 +56,12 @@ function startDataFileWatch(): void {
  * is fully quit. Safe to call repeatedly (startup + after daemon toggles).
  */
 function reconcileScheduler(): void {
-  if (!store) return
-  if (scheduler) return
+  if (!store) {
+    return
+  }
+  if (scheduler) {
+    return
+  }
   scheduler = new Scheduler(store, {
     onFire: () => broadcast(),
     log: (m) => console.log('[scheduler]', m)
@@ -75,14 +89,19 @@ if (!gotLock) {
     reconcileScheduler()
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
-      else showMainWindow()
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createMainWindow()
+      } else {
+        showMainWindow()
+      }
     })
   })
 
   // Keep running in the tray when all windows are closed (macOS tray app behavior).
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
   })
 
   app.on('before-quit', () => {

@@ -27,7 +27,9 @@ export function HistoryScreen({ nav }: ScreenProps): React.JSX.Element {
     for (const r of filtered) {
       const d = new Date(r.start)
       const k = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
-      if (!m.has(k)) m.set(k, { date: d, runs: [] })
+      if (!m.has(k)) {
+        m.set(k, { date: d, runs: [] })
+      }
       m.get(k)!.runs.push(r)
     }
     return [...m.values()]

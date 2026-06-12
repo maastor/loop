@@ -17,11 +17,17 @@ export const STATUS_META: Record<string, { color: string; label: string }> = {
   scheduled: { color: 'var(--text-3)', label: 'scheduled' }
 }
 
-export function StatusDot({ status, size = 7 }: { status: string; size?: number }): React.JSX.Element {
+export function StatusDot({
+  status,
+  size = 7
+}: {
+  status: string
+  size?: number
+}): React.JSX.Element {
   const m = STATUS_META[status] || STATUS_META.scheduled
   return (
     <span
-      className={'dot' + (status === 'running' ? ' dot-pulse' : '')}
+      className={`dot${status === 'running' ? ' dot-pulse' : ''}`}
       style={{ width: size, height: size, background: m.color }}
     />
   )
@@ -50,7 +56,7 @@ export function Toggle({
   return (
     <button
       type="button"
-      className={'toggle' + (value ? ' on' : '') + (small ? ' sm' : '')}
+      className={`toggle${value ? ' on' : ''}${small ? ' sm' : ''}`}
       role="switch"
       aria-checked={value}
       onClick={(e) => {
@@ -84,7 +90,7 @@ export function Seg({
           <button
             key={v}
             type="button"
-            className={'seg-btn' + (v === value ? ' active' : '')}
+            className={`seg-btn${v === value ? ' active' : ''}`}
             onClick={() => onChange(v)}
           >
             {icon ? <Icon name={icon} size={14} /> : null}
@@ -118,10 +124,18 @@ export function Btn({
   title?: string
 }): React.JSX.Element {
   let cls = 'btn'
-  if (primary) cls += ' btn-primary'
-  if (danger) cls += ' btn-danger'
-  if (ghost) cls += ' btn-ghost'
-  if (small) cls += ' btn-sm'
+  if (primary) {
+    cls += ' btn-primary'
+  }
+  if (danger) {
+    cls += ' btn-danger'
+  }
+  if (ghost) {
+    cls += ' btn-ghost'
+  }
+  if (small) {
+    cls += ' btn-sm'
+  }
   return (
     <button type="button" className={cls} onClick={onClick} disabled={disabled} title={title}>
       {icon ? <Icon name={icon} size={14} /> : null}
@@ -179,7 +193,12 @@ export function EmptyState({
 
 // ── change list (files / commits / PRs) ──────────────────────
 export function ChangeItem({ change }: { change: Change }): React.JSX.Element {
-  const icons: Record<string, IconName> = { edit: 'file', commit: 'commit', pr: 'pr', label: 'label' }
+  const icons: Record<string, IconName> = {
+    edit: 'file',
+    commit: 'commit',
+    pr: 'pr',
+    label: 'label'
+  }
   return (
     <span className="change mono">
       <Icon name={icons[change.t] || 'file'} size={13} />
@@ -193,14 +212,15 @@ export function Transcript({ entries }: { entries: TranscriptEntry[] }): React.J
   return (
     <div className="transcript">
       {entries.map((e, i) => {
-        if (e.role === 'user')
+        if (e.role === 'user') {
           return (
             <div key={i} className="tr-line tr-user">
               <span className="tr-mark mono">❯</span>
               <span className="tr-text">{e.text}</span>
             </div>
           )
-        if (e.role === 'assistant')
+        }
+        if (e.role === 'assistant') {
           return (
             <div key={i} className="tr-line tr-assistant">
               <span className="tr-mark" style={{ color: 'var(--accent)' }}>
@@ -209,7 +229,8 @@ export function Transcript({ entries }: { entries: TranscriptEntry[] }): React.J
               <span className="tr-text">{e.text}</span>
             </div>
           )
-        if (e.role === 'tool')
+        }
+        if (e.role === 'tool') {
           return (
             <div key={i} className="tr-line tr-tool">
               <span className="tr-mark" style={{ color: 'var(--green)' }}>
@@ -220,8 +241,9 @@ export function Transcript({ entries }: { entries: TranscriptEntry[] }): React.J
               </span>
             </div>
           )
+        }
         return (
-          <div key={i} className={'tr-line tr-result' + (e.err ? ' tr-err' : '')}>
+          <div key={i} className={`tr-line tr-result${e.err ? ' tr-err' : ''}`}>
             <span className="tr-mark mono">⎿</span>
             <span className="tr-text mono">{e.text}</span>
           </div>

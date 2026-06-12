@@ -54,14 +54,7 @@ describe('HistoryScreen', () => {
 
 describe('RunDetailScreen', () => {
   it('renders the transcript and summary', () => {
-    render(
-      <RunDetailScreen
-        runId={run.id}
-        nav={noop}
-        now={new Date()}
-        openEditor={noop}
-      />
-    )
+    render(<RunDetailScreen runId={run.id} nav={noop} now={new Date()} openEditor={noop} />)
     expect(screen.getByText('Triaged 7 issues and labeled them.')).toBeTruthy()
     expect(screen.getByText('Working on it.')).toBeTruthy()
   })

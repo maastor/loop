@@ -46,9 +46,9 @@ the `.dmg` files.
 
 CI builds are **not** signed with a Developer ID or notarized (no certificate in
 CI: `CSC_IDENTITY_AUTO_DISCOVERY=false`). electron-builder still **ad-hoc signs**
-the arm64 build so it launches — we deliberately do *not* set `mac.identity: null`,
+the arm64 build so it launches — we deliberately do _not_ set `mac.identity: null`,
 because that disables ad-hoc signing and makes Apple Silicon report the app as
-*"Loop is damaged and can't be opened."*
+_"Loop is damaged and can't be opened."_
 
 ### "Loop is damaged and can't be opened" (downloaded .dmg)
 

@@ -5,14 +5,14 @@ import { IPC } from '@shared/ipc'
 import type { RoutineCreateInput } from '@shared/ipc'
 import type { Routine, Tweaks, Settings } from '@shared/types'
 import { uid } from '@shared/schedule'
-import { Store } from '@core/persistence'
+import type { Store } from '@core/persistence'
 import { executeRoutine } from '@core/scheduler'
 import { createRunningRun } from '@core/claude-runner'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
 
-export interface IpcDeps {
+export type IpcDeps = {
   store: Store
   /** Called whenever state mutates so the renderer + tray refresh. */
   broadcast: () => void
@@ -23,7 +23,9 @@ export interface IpcDeps {
 /** Manual "Run now": execute via the main process regardless of the daemon. */
 async function runRoutineNow(store: Store, id: string, broadcast: () => void): Promise<void> {
   const routine = store.getRoutine(id)
-  if (!routine) return
+  if (!routine) {
+    return
+  }
   const run = createRunningRun(routine.id, routine.prompt, routine.dir, 'manual')
   store.addRun(run)
   broadcast()
@@ -45,7 +47,7 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
 
   ipcMain.handle(IPC.routineCreate, (_e, input: RoutineCreateInput) => {
     const routine: Routine = {
-      id: 'rt-' + uid(),
+      id: `rt-${uid()}`,
       name: input.name,
       prompt: input.prompt,
       dir: input.dir,
@@ -78,7 +80,9 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
   ipcMain.handle(IPC.routineRunNow, async (_e, id: string) => {
     // Kick off asynchronously; return the running run record immediately.
     const routine = store.getRoutine(id)
-    if (!routine) return undefined
+    if (!routine) {
+      return undefined
+    }
     void runRoutineNow(store, id, broadcast)
     // The run was added synchronously inside runRoutineNow before the first await,
     // but to be safe return the latest running run for this routine.
@@ -120,15 +124,12 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
 
   ipcMain.handle(IPC.selectDirectory, async () => {
     const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
-    const properties: Array<'openDirectory' | 'createDirectory'> = [
-      'openDirectory',
-      'createDirectory'
-    ]
+    const properties: ('openDirectory' | 'createDirectory')[] = ['openDirectory', 'createDirectory']
     const opts = { title: 'Choose working directory', defaultPath: homedir(), properties }
-    const result = win
-      ? await dialog.showOpenDialog(win, opts)
-      : await dialog.showOpenDialog(opts)
-    if (result.canceled || result.filePaths.length === 0) return null
+    const result = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
     return result.filePaths[0]
   })
 }
@@ -137,7 +138,9 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
 export function broadcastData(store: Store): void {
   const data = store.getAll()
   for (const win of BrowserWindow.getAllWindows()) {
-    if (!win.isDestroyed()) win.webContents.send(IPC.dataChanged, data)
+    if (!win.isDestroyed()) {
+      win.webContents.send(IPC.dataChanged, data)
+    }
   }
   refreshTray()
 }

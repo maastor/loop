@@ -62,7 +62,9 @@ export function createMainWindow(): BrowserWindow {
 /** Show & focus the window, recreating it if it was closed. */
 export function showMainWindow(): void {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore()
+    }
     mainWindow.show()
     mainWindow.focus()
   } else {

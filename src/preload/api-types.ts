@@ -2,7 +2,7 @@
 import type { Routine, Run, Tweaks, Settings, AppData } from '@shared/types'
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
 
-export interface LoopApi {
+export type LoopApi = {
   routines: {
     list: () => Promise<Routine[]>
     get: (id: string) => Promise<Routine | undefined>
@@ -42,6 +42,7 @@ export interface LoopApi {
 }
 
 declare global {
+  // Augmenting the global Window type requires an interface (declaration merging).
   interface Window {
     api: LoopApi
   }

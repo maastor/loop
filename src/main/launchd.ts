@@ -79,7 +79,9 @@ export async function uninstallDaemon(): Promise<DaemonStatus> {
     }
   }
   try {
-    if (existsSync(plistPath)) unlinkSync(plistPath)
+    if (existsSync(plistPath)) {
+      unlinkSync(plistPath)
+    }
   } catch {
     /* ignore unlink failures */
   }

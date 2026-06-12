@@ -3,15 +3,7 @@
 // (RoutineDetailScreen).
 import React from 'react'
 import { useStore } from '../store'
-import {
-  ScreenHead,
-  Btn,
-  Icon,
-  Toggle,
-  ModelChip,
-  StatusDot,
-  RunStats
-} from '../components'
+import { ScreenHead, Btn, Icon, Toggle, ModelChip, StatusDot, RunStats } from '../components'
 import { describeSchedule, computeNextRun } from '@shared/schedule'
 import { fmtDateTime, relUntil } from '@shared/format'
 import type { ScreenProps } from '../views'

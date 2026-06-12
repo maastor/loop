@@ -112,13 +112,13 @@ npm run dist:mac   # build a local .dmg
 
 An Electron app (electron-vite + React 18 + TypeScript + zustand) with four entry points:
 
-| Layer | What it does |
-| --- | --- |
-| **`src/shared`** | Pure types + the schedule / natural-language / formatting logic and seed data. |
-| **`src/core`** | Node-only `Store` (atomic JSON persistence), `claude-runner` (real `claude -p` execution), and `Scheduler` (the tick loop). Shared by the app and the daemon. |
-| **`src/main` · `src/preload`** | Electron main process (window, tray, IPC, background-agent install) and the typed `window.api` bridge. |
-| **`src/renderer`** | React UI; state mirrors the main process over IPC. |
-| **`src/daemon`** | Standalone scheduler launched by a macOS LaunchAgent so routines fire when the app is quit. |
+| Layer                          | What it does                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`src/shared`**               | Pure types + the schedule / natural-language / formatting logic and seed data.                                                                                |
+| **`src/core`**                 | Node-only `Store` (atomic JSON persistence), `claude-runner` (real `claude -p` execution), and `Scheduler` (the tick loop). Shared by the app and the daemon. |
+| **`src/main` · `src/preload`** | Electron main process (window, tray, IPC, background-agent install) and the typed `window.api` bridge.                                                        |
+| **`src/renderer`**             | React UI; state mirrors the main process over IPC.                                                                                                            |
+| **`src/daemon`**               | Standalone scheduler launched by a macOS LaunchAgent so routines fire when the app is quit.                                                                   |
 
 State lives in a single JSON file at `~/Library/Application Support/loop/loop-data.json`. Deeper notes — including the cross-process scheduling model and environment gotchas — are in **[CLAUDE.md](./CLAUDE.md)**; packaging and release details are in **[BUILD.md](./BUILD.md)**.
 

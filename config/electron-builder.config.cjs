@@ -11,12 +11,7 @@ module.exports = {
   // App contents: bundled main/preload/renderer output, resources, and
   // package.json. Build assets under resources/icon-source (svg, render
   // script) are dev-only and intentionally excluded from the packaged app.
-  files: [
-    'out/**/*',
-    'resources/**/*',
-    'package.json',
-    '!resources/icon-source/**/*'
-  ],
+  files: ['out/**/*', 'resources/**/*', 'package.json', '!resources/icon-source/**/*'],
   extraResources: [
     {
       from: 'resources/loop.daemon.plist',

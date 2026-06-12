@@ -14,18 +14,22 @@ const MAX_BACKUPS = 5
 
 function ensureDir(): void {
   const dir = dataDir()
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true })
+  }
 }
 
 function normalize(data: Partial<AppData> | null): AppData {
   const base = defaultAppData()
-  if (!data || typeof data !== 'object') return base
+  if (!data || typeof data !== 'object') {
+    return base
+  }
   return {
     version: APP_DATA_VERSION,
     routines: Array.isArray(data.routines) ? data.routines : base.routines,
     runs: Array.isArray(data.runs) ? data.runs : [],
-    tweaks: { ...base.tweaks, ...(data.tweaks || {}) },
-    settings: { ...base.settings, ...(data.settings || {}) }
+    tweaks: { ...base.tweaks, ...data.tweaks },
+    settings: { ...base.settings, ...data.settings }
   }
 }
 
@@ -53,7 +57,9 @@ export class Store {
       for (let i = 0; i < MAX_BACKUPS; i++) {
         try {
           const bak = backupFile(i)
-          if (existsSync(bak)) return normalize(JSON.parse(readFileSync(bak, 'utf-8')))
+          if (existsSync(bak)) {
+            return normalize(JSON.parse(readFileSync(bak, 'utf-8')))
+          }
         } catch {
           /* try next */
         }
@@ -66,7 +72,9 @@ export class Store {
   private reloadIfStale(): void {
     const file = dataFile()
     try {
-      if (!existsSync(file)) return
+      if (!existsSync(file)) {
+        return
+      }
       const mtime = statSync(file).mtimeMs
       if (mtime > this.lastMtimeMs) {
         this.state = this.readFromDisk()
@@ -78,7 +86,9 @@ export class Store {
 
   private rotateBackups(): void {
     const file = dataFile()
-    if (!existsSync(file)) return
+    if (!existsSync(file)) {
+      return
+    }
     try {
       const last = backupFile(MAX_BACKUPS - 1)
       if (existsSync(last)) {
@@ -86,7 +96,9 @@ export class Store {
       }
       for (let i = MAX_BACKUPS - 1; i > 0; i--) {
         const src = backupFile(i - 1)
-        if (existsSync(src)) renameSync(src, backupFile(i))
+        if (existsSync(src)) {
+          renameSync(src, backupFile(i))
+        }
       }
       // copy current file content into slot 0
       writeFileSync(backupFile(0), readFileSync(file))
@@ -161,8 +173,11 @@ export class Store {
   upsertRoutine(routine: Routine): Routine {
     return this.mutate((s) => {
       const i = s.routines.findIndex((r) => r.id === routine.id)
-      if (i === -1) s.routines = [routine, ...s.routines]
-      else s.routines[i] = routine
+      if (i === -1) {
+        s.routines = [routine, ...s.routines]
+      } else {
+        s.routines[i] = routine
+      }
       return routine
     })
   }
@@ -176,7 +191,9 @@ export class Store {
   toggleRoutine(id: string): Routine | undefined {
     return this.mutate((s) => {
       const r = s.routines.find((x) => x.id === id)
-      if (r) r.enabled = !r.enabled
+      if (r) {
+        r.enabled = !r.enabled
+      }
       return r
     })
   }
@@ -192,7 +209,9 @@ export class Store {
   updateRun(id: string, patch: Partial<Run>): Run | undefined {
     return this.mutate((s) => {
       const i = s.runs.findIndex((r) => r.id === id)
-      if (i === -1) return undefined
+      if (i === -1) {
+        return undefined
+      }
       s.runs[i] = { ...s.runs[i], ...patch }
       return s.runs[i]
     })

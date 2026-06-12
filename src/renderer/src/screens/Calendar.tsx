@@ -25,9 +25,12 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
 
   const runsByDay = React.useMemo(() => {
     const m: Record<string, Run[]> = {}
-    for (const r of runs) (m[dayKey(r.start)] = m[dayKey(r.start)] || []).push(r)
-    for (const k of Object.keys(m))
+    for (const r of runs) {
+      ;(m[dayKey(r.start)] = m[dayKey(r.start)] || []).push(r)
+    }
+    for (const k of Object.keys(m)) {
       m[k].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    }
     return m
   }, [runs])
 
@@ -35,8 +38,11 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
     routines.find((r) => r.id === id)?.name ?? 'Deleted routine'
 
   const shift = (dir: number): void => {
-    if (mode === 'month') setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + dir, 1))
-    else setCursor(new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + dir * 7))
+    if (mode === 'month') {
+      setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + dir, 1))
+    } else {
+      setCursor(new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + dir * 7))
+    }
   }
   const goToday = (): void => {
     const t = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -45,7 +51,9 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
   }
 
   const monthCells = React.useMemo(() => {
-    if (mode !== 'month') return []
+    if (mode !== 'month') {
+      return []
+    }
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1)
     const startOffset = first.getDay()
     const cells: Date[] = []
@@ -56,8 +64,14 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
   }, [cursor, mode])
 
   const weekDays = React.useMemo(() => {
-    if (mode !== 'week') return []
-    const start = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - cursor.getDay())
+    if (mode !== 'week') {
+      return []
+    }
+    const start = new Date(
+      cursor.getFullYear(),
+      cursor.getMonth(),
+      cursor.getDate() - cursor.getDay()
+    )
     return Array.from(
       { length: 7 },
       (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
@@ -120,12 +134,9 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
                     <button
                       type="button"
                       key={i}
-                      className={
-                        'cal-cell' +
-                        (inMonth ? '' : ' out') +
-                        (k === todayKey ? ' today' : '') +
-                        (k === selected ? ' sel' : '')
-                      }
+                      className={`cal-cell${inMonth ? '' : ' out'}${
+                        k === todayKey ? ' today' : ''
+                      }${k === selected ? ' sel' : ''}`}
                       onClick={() => setSelected(k)}
                     >
                       <span className="cal-cell-n mono">{d.getDate()}</span>
@@ -157,11 +168,7 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
                 return (
                   <div
                     key={k}
-                    className={
-                      'week-col' +
-                      (k === todayKey ? ' today' : '') +
-                      (k === selected ? ' sel' : '')
-                    }
+                    className={`week-col${k === todayKey ? ' today' : ''}${k === selected ? ' sel' : ''}`}
                     onClick={() => setSelected(k)}
                   >
                     <div className="week-col-head mono">
@@ -208,7 +215,9 @@ export function CalendarScreen({ nav, now }: ScreenProps): React.JSX.Element {
                 <div
                   key={run.id}
                   className="run-row compact"
-                  onClick={() => nav({ screen: 'run', runId: run.id, from: { screen: 'calendar' } })}
+                  onClick={() =>
+                    nav({ screen: 'run', runId: run.id, from: { screen: 'calendar' } })
+                  }
                 >
                   <StatusDot status={run.status} />
                   <div className="cal-side-main">

@@ -15,7 +15,7 @@ function routine(schedule: Routine['schedule']): Routine {
 }
 
 describe('latestOccurrenceAtOrBefore', () => {
-  it('returns today\'s daily occurrence once the time has passed', () => {
+  it("returns today's daily occurrence once the time has passed", () => {
     const now = new Date(2026, 0, 5, 10, 0, 0) // Mon Jan 5, 10:00
     const occ = latestOccurrenceAtOrBefore(
       routine({ freq: 'daily', time: '09:00', days: [], everyHours: 0 }),
@@ -26,7 +26,7 @@ describe('latestOccurrenceAtOrBefore', () => {
     expect(occ!.getHours()).toBe(9)
   })
 
-  it('returns yesterday when today\'s time has not arrived yet', () => {
+  it("returns yesterday when today's time has not arrived yet", () => {
     const now = new Date(2026, 0, 5, 8, 0, 0)
     const occ = latestOccurrenceAtOrBefore(
       routine({ freq: 'daily', time: '09:00', days: [], everyHours: 0 }),

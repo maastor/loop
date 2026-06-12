@@ -20,7 +20,13 @@ const DENSITY_OPTIONS = [
   { value: 'comfortable', label: 'Comfortable' }
 ]
 
-function TweakSection({ label, children }: { label: string; children: React.ReactNode }): React.JSX.Element {
+function TweakSection({
+  label,
+  children
+}: {
+  label: string
+  children: React.ReactNode
+}): React.JSX.Element {
   return (
     <div style={{ marginBottom: 14 }}>
       <div className="panel-label mono" style={{ marginBottom: 8 }}>

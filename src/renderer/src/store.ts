@@ -3,13 +3,14 @@ import { create } from 'zustand'
 import type { Routine, Run, Tweaks, Settings, AppData } from '@shared/types'
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
 
-interface LoopState {
+type LoopState = {
   routines: Routine[]
   runs: Run[]
   tweaks: Tweaks
   settings: Settings
   daemon: DaemonStatus
   loaded: boolean
+  loadError: string | null
 
   load: () => Promise<void>
   applyData: (data: AppData) => void
@@ -32,16 +33,22 @@ export const useStore = create<LoopState>((set, get) => ({
   settings: { daemonEnabled: false, pausedAll: false },
   daemon: { installed: false, loaded: false },
   loaded: false,
+  loadError: null,
 
   load: async () => {
-    const [routines, runs, tweaks, settings, daemon] = await Promise.all([
-      window.api.routines.list(),
-      window.api.runs.list(),
-      window.api.tweaks.get(),
-      window.api.settings.get(),
-      window.api.daemon.status()
-    ])
-    set({ routines, runs, tweaks, settings, daemon, loaded: true })
+    try {
+      const [routines, runs, tweaks, settings, daemon] = await Promise.all([
+        window.api.routines.list(),
+        window.api.runs.list(),
+        window.api.tweaks.get(),
+        window.api.settings.get(),
+        window.api.daemon.status()
+      ])
+      set({ routines, runs, tweaks, settings, daemon, loaded: true, loadError: null })
+    } catch (e) {
+      // Surface the failure instead of leaving the UI stuck on "Loading…".
+      set({ loaded: true, loadError: String(e) })
+    }
   },
 
   applyData: (data) => {
@@ -87,9 +94,7 @@ export const useStore = create<LoopState>((set, get) => ({
     set({ settings })
   },
   setDaemonEnabled: async (enabled) => {
-    const daemon = enabled
-      ? await window.api.daemon.install()
-      : await window.api.daemon.uninstall()
+    const daemon = enabled ? await window.api.daemon.install() : await window.api.daemon.uninstall()
     const settings = await window.api.settings.set({ daemonEnabled: enabled })
     set({ daemon, settings })
   }
