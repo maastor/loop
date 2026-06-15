@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { Editor } from '@renderer/screens/Editor'
+import { buildRoutineEdits } from '@renderer/screens/routine-editor-state'
 
 // Minimal stub of the preload `window.api` surface used by the store.
 function stubApi(): void {
@@ -59,5 +60,27 @@ describe('Editor', () => {
     render(<Editor routine={null} onClose={onClose} />)
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('normalizes save edits before sending them to the store', () => {
+    expect(
+      buildRoutineEdits({
+        name: '  Nightly audit  ',
+        prompt: '  Check deps  ',
+        dir: '   ',
+        model: 'sonnet',
+        schedule: { freq: 'daily', time: '22:00', days: [], everyHours: 0 },
+        permissionMode: '',
+        grace: '-10'
+      })
+    ).toEqual({
+      name: 'Nightly audit',
+      prompt: 'Check deps',
+      dir: '~',
+      model: 'sonnet',
+      schedule: { freq: 'daily', time: '22:00', days: [], everyHours: 0 },
+      permissionMode: undefined,
+      missedRunGraceMinutes: 0
+    })
   })
 })
