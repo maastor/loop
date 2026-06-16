@@ -12,7 +12,15 @@ function stubApi(): void {
       update: async (r: any) => r
     },
     runs: { list: async () => [] },
-    tweaks: { get: async () => ({ accent: '#E8703F', layout: 'rows', density: 'comfortable' }) },
+    tweaks: {
+      get: async () => ({
+        accent: '#E8703F',
+        layout: 'rows',
+        density: 'comfortable',
+        routineGroupBy: 'project',
+        routineSortBy: 'name'
+      })
+    },
     settings: { get: async () => ({ daemonEnabled: false, pausedAll: false }) },
     daemon: { status: async () => ({ installed: false, loaded: false }) },
     onDataChanged: () => () => {}

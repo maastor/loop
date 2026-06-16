@@ -89,11 +89,15 @@ export type Run = {
 
 export type LayoutVariant = 'rows' | 'cards' | 'table'
 export type Density = 'compact' | 'comfortable'
+export type RoutineGroupBy = 'project' | 'status' | 'schedule' | 'none'
+export type RoutineSortBy = 'name' | 'nextRun' | 'lastRun'
 
 export type Tweaks = {
   accent: string
   layout: LayoutVariant
   density: Density
+  routineGroupBy: RoutineGroupBy
+  routineSortBy: RoutineSortBy
 }
 
 export type Settings = {

@@ -58,7 +58,9 @@ export const seedRoutines: Routine[] = [
 export const defaultTweaks: Tweaks = {
   accent: '#E8703F',
   layout: 'rows',
-  density: 'comfortable'
+  density: 'comfortable',
+  routineGroupBy: 'project',
+  routineSortBy: 'name'
 }
 
 export const defaultSettings: Settings = {

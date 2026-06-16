@@ -37,7 +37,13 @@ type LoopState = {
 export const useStore = create<LoopState>((set, get) => ({
   routines: [],
   runs: [],
-  tweaks: { accent: '#E8703F', layout: 'rows', density: 'comfortable' },
+  tweaks: {
+    accent: '#E8703F',
+    layout: 'rows',
+    density: 'comfortable',
+    routineGroupBy: 'project',
+    routineSortBy: 'name'
+  },
   settings: {
     daemonEnabled: false,
     pausedAll: false,
