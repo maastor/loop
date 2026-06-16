@@ -17,7 +17,14 @@ import type { Routine } from '@shared/types'
 beforeEach(() => {
   ;(globalThis as any).window.api = {
     tweaks: {
-      set: async (p: any) => ({ accent: '#E8703F', layout: 'rows', density: 'comfortable', ...p })
+      set: async (p: any) => ({
+        accent: '#E8703F',
+        layout: 'rows',
+        density: 'comfortable',
+        routineGroupBy: 'project',
+        routineSortBy: 'name',
+        ...p
+      })
     },
     settings: {
       set: async (p: any) => ({ daemonEnabled: false, pausedAll: false, ...p })
