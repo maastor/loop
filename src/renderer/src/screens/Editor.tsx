@@ -1,31 +1,11 @@
 // renderer/src/screens/Editor.tsx — create / edit routine sheet (worker unit 3).
 // Ported from project/app/screens-editor.jsx (EditorSheet).
 import React from 'react'
-import { useStore } from '../store'
 import { Btn, Icon, Seg } from '../components'
-import {
-  parseNL,
-  scheduleToNL,
-  describeSchedule,
-  computeNextRun,
-  MODELS,
-  PERMISSION_MODES
-} from '@shared/schedule'
+import { describeSchedule, MODELS, PERMISSION_MODES } from '@shared/schedule'
 import { fmtDateTime } from '@shared/format'
 import type { Routine, Schedule, ModelId, PermissionMode } from '@shared/types'
-
-// Mon..Sun mapping to day indices, matching the prototype's ED_DAYS order.
-const ED_DAYS: { v: number; l: string }[] = [
-  { v: 1, l: 'Mon' },
-  { v: 2, l: 'Tue' },
-  { v: 3, l: 'Wed' },
-  { v: 4, l: 'Thu' },
-  { v: 5, l: 'Fri' },
-  { v: 6, l: 'Sat' },
-  { v: 0, l: 'Sun' }
-]
-
-type NlState = 'idle' | 'ok' | 'bad'
+import { EDITOR_DAYS, useRoutineEditorState } from './routine-editor-state'
 
 export function Editor({
   routine,
@@ -34,83 +14,34 @@ export function Editor({
   routine: Routine | null
   onClose: () => void
 }): React.JSX.Element {
-  const createRoutine = useStore((s) => s.createRoutine)
-  const updateRoutine = useStore((s) => s.updateRoutine)
-  const isNew = !routine
-
-  const [name, setName] = React.useState(routine ? routine.name : '')
-  const [prompt, setPrompt] = React.useState(routine ? routine.prompt : '')
-  const [dir, setDir] = React.useState(routine ? routine.dir : '~')
-  const [model, setModel] = React.useState<ModelId>(routine ? routine.model : 'sonnet')
-  // '' means "inherit the global default from Settings".
-  const [permissionMode, setPermissionMode] = React.useState<PermissionMode | ''>(
-    routine?.permissionMode ?? ''
-  )
-  const [grace, setGrace] = React.useState<string>(
-    routine?.missedRunGraceMinutes != null ? String(routine.missedRunGraceMinutes) : ''
-  )
-  const [schedule, setSchedule] = React.useState<Schedule>(
-    routine ? { ...routine.schedule } : { freq: 'daily', time: '09:00', days: [1], everyHours: 6 }
-  )
-  const [nl, setNl] = React.useState(routine ? scheduleToNL(routine.schedule) : '')
-  const [nlState, setNlState] = React.useState<NlState>(routine ? 'ok' : 'idle')
-  const [structured, setStructured] = React.useState(false)
-
-  // natural language → schedule
-  const onNlChange = (v: string): void => {
-    setNl(v)
-    if (!v.trim()) {
-      setNlState('idle')
-      return
-    }
-    const parsed = parseNL(v)
-    if (parsed) {
-      setSchedule((s) => ({ ...s, ...parsed }))
-      setNlState('ok')
-    } else {
-      setNlState('bad')
-    }
-  }
-
-  // structured → schedule (+ regenerate NL)
-  const patchSchedule = (patch: Partial<Schedule>): void => {
-    const next = { ...schedule, ...patch }
-    setSchedule(next)
-    setNl(scheduleToNL(next))
-    setNlState('ok')
-  }
-
-  const toggleDay = (d: number): void => {
-    const days = schedule.days.includes(d)
-      ? schedule.days.filter((x) => x !== d)
-      : [...schedule.days, d].sort((a, b) => a - b)
-    if (days.length === 0) {
-      return
-    }
-    patchSchedule({ days })
-  }
-
-  const valid = !!name.trim() && !!prompt.trim() && (nlState !== 'bad' || structured)
-  const preview = computeNextRun(schedule, new Date())
-
-  const save = async (): Promise<void> => {
-    if (!valid) {
-      return
-    }
-    const edits = {
-      name: name.trim(),
-      prompt: prompt.trim(),
-      dir: dir.trim() || '~',
-      model,
-      schedule,
-      permissionMode: permissionMode || undefined,
-      missedRunGraceMinutes: grace.trim() === '' ? undefined : Math.max(0, +grace || 0)
-    }
-    await (routine
-      ? updateRoutine({ ...routine, ...edits })
-      : createRoutine({ ...edits, enabled: true }))
-    onClose()
-  }
+  const {
+    isNew,
+    name,
+    setName,
+    prompt,
+    setPrompt,
+    dir,
+    setDir,
+    model,
+    setModel,
+    permissionMode,
+    setPermissionMode,
+    grace,
+    setGrace,
+    schedule,
+    nl,
+    nlState,
+    structured,
+    setStructured,
+    valid,
+    preview,
+    modelDesc,
+    onNlChange,
+    patchSchedule,
+    toggleDay,
+    chooseDir,
+    save
+  } = useRoutineEditorState({ routine, onClose })
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -121,15 +52,6 @@ export function Editor({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
-
-  const modelDesc = MODELS.find((m) => m.id === model)?.desc
-
-  const chooseDir = async (): Promise<void> => {
-    const picked = await window.api.dialog.selectDirectory()
-    if (picked) {
-      setDir(picked)
-    }
-  }
 
   return (
     <div
@@ -228,7 +150,7 @@ export function Editor({
                 />
                 {schedule.freq === 'weekly' ? (
                   <div className="day-picker">
-                    {ED_DAYS.map((d) => (
+                    {EDITOR_DAYS.map((d) => (
                       <button
                         key={d.v}
                         type="button"

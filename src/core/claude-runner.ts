@@ -9,7 +9,8 @@ import { homedir } from 'os'
 import { join } from 'path'
 import type { Change, ModelId, PermissionMode, Run, TranscriptEntry } from '@shared/types'
 import { expandHome } from './paths'
-import { type StreamEvent, summarizeToolArg, deriveChange, sumTokens } from './claude-stream'
+import { type StreamEvent } from './claude-stream'
+import { createTranscriptCollector } from './claude-run-transcript'
 
 export type RunCallbacks = {
   /** Called whenever a new transcript entry is produced. */
@@ -99,19 +100,14 @@ export function runClaude(
   return new Promise<RunResult>((resolve) => {
     const cmd = resolveClaudeCommand()
     const cwd = expandHome(opts.dir)
-    const transcript: TranscriptEntry[] = []
-    const changes: Change[] = []
     const startedAt = Date.now()
-
-    const push = (entry: TranscriptEntry): void => {
-      transcript.push(entry)
-      cb.onTranscript?.(entry, transcript)
-    }
-
-    push({ role: 'user', text: opts.prompt })
+    const collector = createTranscriptCollector({
+      prompt: opts.prompt,
+      onTranscript: cb.onTranscript
+    })
 
     if (!existsSync(cwd)) {
-      push({ role: 'result', text: `Working directory not found: ${cwd}`, err: true })
+      collector.push({ role: 'result', text: `Working directory not found: ${cwd}`, err: true })
       resolve({
         status: 'failed',
         durationSec: Math.round((Date.now() - startedAt) / 1000),
@@ -119,7 +115,7 @@ export function runClaude(
         tokens: null,
         summary: `Run failed — working directory not found: ${cwd}`,
         changes: [],
-        transcript
+        transcript: collector.transcript
       })
       return
     }
@@ -139,7 +135,7 @@ export function runClaude(
     try {
       child = spawn(cmd, args, { cwd, env: buildEnv() })
     } catch (e) {
-      push({ role: 'result', text: `Failed to launch claude: ${String(e)}`, err: true })
+      collector.push({ role: 'result', text: `Failed to launch claude: ${String(e)}`, err: true })
       resolve({
         status: 'failed',
         durationSec: Math.round((Date.now() - startedAt) / 1000),
@@ -147,17 +143,13 @@ export function runClaude(
         tokens: null,
         summary: `Run failed — could not launch the claude CLI.`,
         changes: [],
-        transcript
+        transcript: collector.transcript
       })
       return
     }
 
     let buffer = ''
     let stderr = ''
-    let finalSummary = ''
-    let costUsd: number | null = null
-    let tokens: number | null = null
-    let isError = false
     let timedOut = false
 
     // Nothing ever writes to the child's stdin; close it so a CLI that tries to read
@@ -171,7 +163,7 @@ export function runClaude(
     if (opts.timeoutMs && opts.timeoutMs > 0) {
       timer = setTimeout(() => {
         timedOut = true
-        push({
+        collector.push({
           role: 'result',
           text: `Run timed out after ${Math.round(opts.timeoutMs! / 60000)}m`,
           err: true
@@ -191,62 +183,13 @@ export function runClaude(
       }, opts.timeoutMs)
     }
 
-    const handleEvent = (evt: StreamEvent): void => {
-      if (evt.type === 'assistant' && evt.message?.content) {
-        for (const block of evt.message.content) {
-          if (block.type === 'text' && typeof block.text === 'string' && block.text.trim()) {
-            push({ role: 'assistant', text: block.text.trim() })
-          } else if (block.type === 'tool_use' && typeof block.name === 'string') {
-            const arg = summarizeToolArg(block.name, block.input)
-            push({ role: 'tool', name: block.name, arg })
-            const change = deriveChange(block.name, arg)
-            if (change) {
-              changes.push(change)
-            }
-          }
-        }
-      } else if (evt.type === 'user' && evt.message?.content) {
-        for (const block of evt.message.content) {
-          if (block.type === 'tool_result') {
-            const content = block.content
-            let text = ''
-            if (typeof content === 'string') {
-              text = content
-            } else if (Array.isArray(content)) {
-              text = content
-                .map((c: Record<string, unknown>) => (typeof c.text === 'string' ? c.text : ''))
-                .join('')
-            }
-            text = text.replace(/\s+/g, ' ').trim().slice(0, 200)
-            if (text) {
-              push({ role: 'result', text, err: block.is_error === true })
-            }
-          }
-        }
-      } else if (evt.type === 'result') {
-        if (typeof evt.result === 'string') {
-          finalSummary = evt.result
-        }
-        if (typeof evt.total_cost_usd === 'number') {
-          costUsd = +evt.total_cost_usd.toFixed(4)
-        }
-        const t = sumTokens(evt.usage)
-        if (t != null) {
-          tokens = t
-        }
-        if (evt.is_error) {
-          isError = true
-        }
-      }
-    }
-
     const processLine = (line: string): void => {
       const trimmed = line.trim()
       if (!trimmed) {
         return
       }
       try {
-        handleEvent(JSON.parse(trimmed) as StreamEvent)
+        collector.handleEvent(JSON.parse(trimmed) as StreamEvent)
       } catch {
         /* ignore non-JSON noise */
       }
@@ -275,17 +218,21 @@ export function runClaude(
         processLine(buffer)
       }
       const durationSec = Math.round((Date.now() - startedAt) / 1000)
-      const failed = timedOut || isError || (code !== 0 && code !== null)
+      const failed = timedOut || collector.isError || (code !== 0 && code !== null)
       // Preserve the result's Markdown structure (newlines, lists) for the run-detail
       // view, which renders it as Markdown; only cap runs of blank lines. List previews
       // collapse it to one line via CSS (white-space: nowrap).
-      let summary = finalSummary.replace(/\n{3,}/g, '\n\n').trim()
+      let summary = collector.finalSummary.replace(/\n{3,}/g, '\n\n').trim()
       if (timedOut && !summary) {
         summary = `Timed out after ${Math.round((opts.timeoutMs ?? 0) / 60000)} minutes.`
       }
       if (failed && !summary) {
         summary = stderr.trim().split('\n').slice(-3).join(' ').slice(0, 240) || 'Run failed.'
-        push({ role: 'result', text: summary || `claude exited with code ${code}`, err: true })
+        collector.push({
+          role: 'result',
+          text: summary || `claude exited with code ${code}`,
+          err: true
+        })
       }
       if (!summary) {
         summary = 'Completed — see transcript for details.'
@@ -293,16 +240,16 @@ export function runClaude(
       resolve({
         status: failed ? 'failed' : 'success',
         durationSec,
-        costUsd,
-        tokens,
+        costUsd: collector.costUsd,
+        tokens: collector.tokens,
         summary: failed ? `Run failed — ${summary}` : summary,
-        changes,
-        transcript
+        changes: collector.changes,
+        transcript: collector.transcript
       })
     }
 
     child.on('error', (err) => {
-      push({ role: 'result', text: `Process error: ${err.message}`, err: true })
+      collector.push({ role: 'result', text: `Process error: ${err.message}`, err: true })
       finish(1)
     })
     child.on('close', (code) => finish(code))
