@@ -72,12 +72,6 @@ An optional macOS background agent fires your routines on schedule even when Loo
 </tr>
 </table>
 
-**Also in the box:**
-
-- **Menu-bar status** — a tray item (and in-window pill) showing what's running now, what's next up, recent runs, and a pause-all switch.
-- **Tweaks** — switch the routines list between rows / cards / table, set density, and pick an accent color.
-- **Native folder picker** — browse for a routine's working directory instead of typing the path.
-
 ---
 
 ## Requirements

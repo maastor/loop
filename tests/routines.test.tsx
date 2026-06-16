@@ -1,5 +1,5 @@
 // tests/routines.test.tsx — RoutinesScreen renders and toggle/run-now fire without throwing.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { RoutinesScreen } from '@renderer/screens/Routines'
 import { useStore } from '@renderer/store'
@@ -30,7 +30,12 @@ beforeEach(() => {
     settings: { get: async () => useStore.getState().settings },
     daemon: { status: async () => ({ installed: false, loaded: false }) }
   }
-  useStore.setState({ routines: [routine], runs: [] })
+  useStore.setState({
+    routines: [routine],
+    runs: [],
+    toggleRoutine: vi.fn(async () => {}),
+    runNow: vi.fn(async () => {})
+  })
 })
 
 describe('RoutinesScreen', () => {
