@@ -58,14 +58,8 @@ export const useStore = create<LoopState>((set, get) => ({
 
   load: async () => {
     try {
-      const [routines, runs, tweaks, settings, daemon] = await Promise.all([
-        window.api.routines.list(),
-        window.api.runs.list(),
-        window.api.tweaks.get(),
-        window.api.settings.get(),
-        window.api.daemon.status()
-      ])
-      set({ routines, runs, tweaks, settings, daemon, loaded: true, loadError: null })
+      const [data, daemon] = await Promise.all([window.api.data.get(), window.api.daemon.status()])
+      set({ ...stateFromAppData(data), daemon, loaded: true, loadError: null })
     } catch (e) {
       // Surface the failure instead of leaving the UI stuck on "Loading…".
       set({ loaded: true, loadError: String(e) })
@@ -73,14 +67,7 @@ export const useStore = create<LoopState>((set, get) => ({
   },
 
   applyData: (data) => {
-    set({
-      routines: data.routines,
-      runs: [...data.runs].sort(
-        (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
-      ),
-      tweaks: data.tweaks,
-      settings: data.settings
-    })
+    set(stateFromAppData(data))
   },
 
   createRoutine: async (input) => {
@@ -141,9 +128,20 @@ export const useStore = create<LoopState>((set, get) => ({
 
 /** Wire the main-process "data changed" push into the store. Call once at startup. */
 export function subscribeToDataChanges(): () => void {
-  return window.api.onDataChanged((data) => {
+  return window.api.data.onChanged((data) => {
     useStore.getState().applyData(data)
   })
+}
+
+function stateFromAppData(
+  data: AppData
+): Pick<LoopState, 'routines' | 'runs' | 'tweaks' | 'settings'> {
+  return {
+    routines: data.routines,
+    runs: [...data.runs].sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()),
+    tweaks: data.tweaks,
+    settings: data.settings
+  }
 }
 
 /** Wire the updater status push into the store. Call once at startup. */

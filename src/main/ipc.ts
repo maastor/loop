@@ -21,8 +21,7 @@ export type IpcDeps = {
 }
 
 export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: IpcDeps): void {
-  ipcMain.handle(IPC.routinesList, () => store.listRoutines())
-  ipcMain.handle(IPC.routinesGet, (_e, id: string) => store.getRoutine(id))
+  ipcMain.handle(IPC.dataGet, () => store.getAll())
 
   ipcMain.handle(IPC.routineCreate, (_e, input: RoutineCreateInput) => {
     const routine: Routine = {
@@ -70,17 +69,12 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
     return started.run
   })
 
-  ipcMain.handle(IPC.runsList, (_e, routineId?: string) => store.listRuns(routineId))
-  ipcMain.handle(IPC.runGet, (_e, id: string) => store.getRun(id))
-
-  ipcMain.handle(IPC.tweaksGet, () => store.getTweaks())
   ipcMain.handle(IPC.tweaksSet, (_e, patch: Partial<Tweaks>) => {
     const t = store.setTweaks(patch)
     broadcast()
     return t
   })
 
-  ipcMain.handle(IPC.settingsGet, () => store.getSettings())
   ipcMain.handle(IPC.settingsSet, (_e, patch: Partial<Settings>) => {
     const s = store.setSettings(patch)
     broadcast()

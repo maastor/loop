@@ -2,18 +2,13 @@
 import type { ModelId, PermissionMode, Schedule } from './types'
 
 export const IPC = {
-  routinesList: 'routines:list',
-  routinesGet: 'routines:get',
+  dataGet: 'data:get',
   routineCreate: 'routines:create',
   routineUpdate: 'routines:update',
   routineDelete: 'routines:delete',
   routineToggle: 'routines:toggle',
   routineRunNow: 'routines:runNow',
-  runsList: 'runs:list',
-  runGet: 'runs:get',
-  tweaksGet: 'tweaks:get',
   tweaksSet: 'tweaks:set',
-  settingsGet: 'settings:get',
   settingsSet: 'settings:set',
   daemonStatus: 'daemon:status',
   daemonInstall: 'daemon:install',

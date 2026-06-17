@@ -3,25 +3,23 @@ import type { Routine, Run, Tweaks, Settings, AppData, UpdateStatus } from '@sha
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
 
 export type LoopApi = {
+  data: {
+    /** Read one internally consistent persisted-state snapshot. */
+    get: () => Promise<AppData>
+    /** Subscribe to persisted-state changes. Returns an unsubscribe fn. */
+    onChanged: (cb: (data: AppData) => void) => () => void
+  }
   routines: {
-    list: () => Promise<Routine[]>
-    get: (id: string) => Promise<Routine | undefined>
     create: (input: RoutineCreateInput) => Promise<Routine>
     update: (routine: Routine) => Promise<Routine>
     delete: (id: string) => Promise<void>
     toggle: (id: string) => Promise<Routine | undefined>
     runNow: (id: string) => Promise<Run | undefined>
   }
-  runs: {
-    list: (routineId?: string) => Promise<Run[]>
-    get: (id: string) => Promise<Run | undefined>
-  }
   tweaks: {
-    get: () => Promise<Tweaks>
     set: (patch: Partial<Tweaks>) => Promise<Tweaks>
   }
   settings: {
-    get: () => Promise<Settings>
     set: (patch: Partial<Settings>) => Promise<Settings>
   }
   daemon: {
@@ -47,8 +45,6 @@ export type LoopApi = {
     /** Open a native folder picker; resolves to the chosen absolute path, or null if cancelled. */
     selectDirectory: () => Promise<string | null>
   }
-  /** Subscribe to "data changed on disk / by another process" pushes. Returns an unsubscribe fn. */
-  onDataChanged: (cb: (data: AppData) => void) => () => void
 }
 
 declare global {
