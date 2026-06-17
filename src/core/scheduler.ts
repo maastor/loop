@@ -4,10 +4,15 @@
 // tick that, on each pass, finds routines whose latest schedule occurrence is due and
 // not yet satisfied by an existing run, then dispatches them. Missed occurrences older
 // than the grace window are skipped (recorded implicitly by advancing past them).
-import type { Routine, Run, Settings } from '@shared/types'
+import type { Routine, Settings } from '@shared/types'
 import { scheduleTimesForDay } from '@shared/schedule'
 import type { Store } from './persistence'
-import { runClaude, createRunningRun } from './claude-runner'
+import {
+  createRunningRun,
+  executeRoutine,
+  startRoutineExecution,
+  type RoutineExecution
+} from './routine-execution'
 
 const DEFAULT_TICK_MS = 60_000
 /**
@@ -52,40 +57,16 @@ export function latestOccurrenceAtOrBefore(routine: Routine, now: Date): Date | 
 export type SchedulerOptions = {
   tickMs?: number
   /** Override executor (used in tests). Defaults to runClaude-backed execution. */
-  execute?: (routine: Routine, run: Run, store: Store) => Promise<void>
+  execute?: RoutineExecution
   /** Called after each tick with the list of routine ids fired this tick. */
   onFire?: (routineIds: string[]) => void
   log?: (msg: string) => void
 }
 
-/** Execute a routine end-to-end: stream Claude output into the run record. */
-export async function executeRoutine(routine: Routine, run: Run, store: Store): Promise<void> {
-  const settings = store.getSettings()
-  const permissionMode = routine.permissionMode ?? settings.defaultPermissionMode ?? 'bypass'
-  const timeoutMs = (settings.runTimeoutMinutes ?? 0) * 60 * 1000
-  const result = await runClaude(
-    { prompt: routine.prompt, dir: routine.dir, model: routine.model, permissionMode, timeoutMs },
-    {
-      onTranscript: (_entry, all) => {
-        store.updateRun(run.id, { transcript: all })
-      }
-    }
-  )
-  store.updateRun(run.id, {
-    status: result.status,
-    durationSec: result.durationSec,
-    costUsd: result.costUsd,
-    tokens: result.tokens,
-    summary: result.summary,
-    changes: result.changes,
-    transcript: result.transcript
-  })
-}
-
 export class Scheduler {
   private timer: NodeJS.Timeout | null = null
   private readonly tickMs: number
-  private readonly execute: (routine: Routine, run: Run, store: Store) => Promise<void>
+  private readonly execute: RoutineExecution
   private readonly onFire?: (routineIds: string[]) => void
   private readonly log: (msg: string) => void
   /** Routine ids currently executing (in this process) to avoid double-dispatch. */
@@ -190,9 +171,8 @@ export class Scheduler {
       return
     }
     const graceMin = Math.round(graceMsFor(routine, settings) / 60000)
-    const run = createRunningRun(routine.id, routine.prompt, routine.dir, 'scheduled')
+    const run = createRunningRun(routine, 'scheduled', occ.toISOString())
     run.status = 'skipped'
-    run.scheduledFor = occ.toISOString()
     run.durationSec = 0
     run.summary = `Skipped — Loop was offline at the scheduled time and the ${graceMin}-minute catch-up window had passed.`
     run.transcript = [
@@ -209,18 +189,14 @@ export class Scheduler {
   private async dispatch(routine: Routine, now: Date): Promise<void> {
     this.inFlight.add(routine.id)
     const occ = latestOccurrenceAtOrBefore(routine, now)
-    const run = createRunningRun(routine.id, routine.prompt, routine.dir, 'scheduled')
-    run.scheduledFor = occ ? occ.toISOString() : undefined
-    this.store.addRun(run)
+    const { run, completion } = startRoutineExecution(this.store, routine, {
+      trigger: 'scheduled',
+      scheduledFor: occ?.toISOString(),
+      execute: this.execute
+    })
     this.log(`dispatch ${routine.name} (${routine.id}) for ${run.scheduledFor}`)
     try {
-      await this.execute(routine, run, this.store)
-    } catch (e) {
-      this.store.updateRun(run.id, {
-        status: 'failed',
-        durationSec: 0,
-        summary: `Run failed — ${String(e)}`
-      })
+      await completion
     } finally {
       this.inFlight.delete(routine.id)
     }

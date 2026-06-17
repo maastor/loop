@@ -6,8 +6,7 @@ import type { RoutineCreateInput } from '@shared/ipc'
 import type { Routine, Tweaks, Settings } from '@shared/types'
 import { uid } from '@shared/schedule'
 import type { Store } from '@core/persistence'
-import { executeRoutine } from '@core/scheduler'
-import { createRunningRun } from '@core/claude-runner'
+import { startRoutineExecution } from '@core/routine-execution'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
@@ -19,27 +18,6 @@ export type IpcDeps = {
   broadcast: () => void
   /** Re-sync the in-app scheduler with the daemon state after a daemon toggle. */
   reconcileScheduler: () => void
-}
-
-/** Manual "Run now": execute via the main process regardless of the daemon. */
-async function runRoutineNow(store: Store, id: string, broadcast: () => void): Promise<void> {
-  const routine = store.getRoutine(id)
-  if (!routine) {
-    return
-  }
-  const run = createRunningRun(routine.id, routine.prompt, routine.dir, 'manual')
-  store.addRun(run)
-  broadcast()
-  try {
-    await executeRoutine(routine, run, store)
-  } catch (e) {
-    store.updateRun(run.id, {
-      status: 'failed',
-      durationSec: 0,
-      summary: `Run failed — ${String(e)}`
-    })
-  }
-  broadcast()
 }
 
 export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: IpcDeps): void {
@@ -86,10 +64,10 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
     if (!routine) {
       return undefined
     }
-    void runRoutineNow(store, id, broadcast)
-    // The run was added synchronously inside runRoutineNow before the first await,
-    // but to be safe return the latest running run for this routine.
-    return store.listRuns(id).find((r) => r.status === 'running')
+    const started = startRoutineExecution(store, routine, { trigger: 'manual' })
+    broadcast()
+    void started.completion.finally(broadcast)
+    return started.run
   })
 
   ipcMain.handle(IPC.runsList, (_e, routineId?: string) => store.listRuns(routineId))
