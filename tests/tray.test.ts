@@ -10,6 +10,7 @@ function routine(over: Partial<Routine> = {}): Routine {
     name: 'Morning standup',
     prompt: 'do it',
     dir: '~/work',
+    agent: 'claude',
     model: 'sonnet',
     enabled: true,
     schedule: { freq: 'daily', time: '10:00', days: [], everyHours: 0 },
@@ -34,6 +35,7 @@ function run(over: Partial<Run> = {}): Run {
 }
 
 const settings = (over: Partial<Settings> = {}): Settings => ({
+  defaultAgent: 'claude',
   daemonEnabled: false,
   pausedAll: false,
   defaultPermissionMode: 'bypass',

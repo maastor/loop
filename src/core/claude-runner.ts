@@ -7,25 +7,11 @@ import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
-import type { Change, ModelId, PermissionMode, Run, TranscriptEntry } from '@shared/types'
+import type { ModelId, PermissionMode } from '@shared/types'
 import { expandHome } from './paths'
 import { type StreamEvent } from './claude-stream'
 import { createTranscriptCollector } from './claude-run-transcript'
-
-export type RunCallbacks = {
-  /** Called whenever a new transcript entry is produced. */
-  onTranscript?: (entry: TranscriptEntry, all: TranscriptEntry[]) => void
-}
-
-export type RunResult = {
-  status: 'success' | 'failed'
-  durationSec: number
-  costUsd: number | null
-  tokens: number | null
-  summary: string
-  changes: Change[]
-  transcript: TranscriptEntry[]
-}
+import type { AgentRunOptions, RunCallbacks, RunResult } from './agent-runner'
 
 /** Resolve the `claude` executable, since GUI/daemon processes have a sparse PATH. */
 export function resolveClaudeCommand(): string {
@@ -87,16 +73,7 @@ export function permissionArgs(mode: PermissionMode): string[] {
  * Run a routine's prompt through the Claude CLI. Resolves when the process exits.
  * Streams transcript entries via callbacks as they arrive.
  */
-export function runClaude(
-  opts: {
-    prompt: string
-    dir: string
-    model: ModelId
-    permissionMode?: PermissionMode
-    timeoutMs?: number
-  },
-  cb: RunCallbacks = {}
-): Promise<RunResult> {
+export function runClaude(opts: AgentRunOptions, cb: RunCallbacks = {}): Promise<RunResult> {
   return new Promise<RunResult>((resolve) => {
     const cmd = resolveClaudeCommand()
     const cwd = expandHome(opts.dir)
@@ -127,7 +104,7 @@ export function runClaude(
       'stream-json',
       '--verbose',
       '--model',
-      MODEL_FLAG[opts.model] || 'sonnet',
+      MODEL_FLAG[opts.model as ModelId] || 'sonnet',
       ...permissionArgs(opts.permissionMode ?? 'bypass')
     ]
 
@@ -254,29 +231,4 @@ export function runClaude(
     })
     child.on('close', (code) => finish(code))
   })
-}
-
-/** Build the in-progress Run record stored while a routine is executing. */
-export function createRunningRun(
-  routineId: string,
-  prompt: string,
-  dir: string,
-  trigger: Run['trigger']
-): Run {
-  return {
-    id: `run-${routineId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    routineId,
-    start: new Date().toISOString(),
-    durationSec: null,
-    status: 'running',
-    costUsd: null,
-    tokens: null,
-    summary: 'Run started…',
-    changes: [],
-    transcript: [
-      { role: 'user', text: prompt },
-      { role: 'result', text: `Session started in ${dir}` }
-    ],
-    trigger
-  }
 }

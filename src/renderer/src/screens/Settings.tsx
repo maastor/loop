@@ -4,7 +4,7 @@ import React from 'react'
 import { useStore } from '../store'
 import { ScreenHead, Toggle, Seg } from '../components'
 import { PERMISSION_MODES } from '@shared/schedule'
-import type { PermissionMode } from '@shared/types'
+import type { AgentId, PermissionMode } from '@shared/types'
 import type { ScreenProps } from '../views'
 
 export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
@@ -53,6 +53,23 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
       <ScreenHead title="Settings" sub="Scheduling and background behavior" />
 
       <div className="panel settings-section">
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Default agent</div>
+            <div className="settings-desc">
+              Agent preselected when creating a new routine. Existing routines are unchanged.
+            </div>
+          </div>
+          <Seg
+            value={settings.defaultAgent}
+            onChange={(value) => void setSetting('defaultAgent', value as AgentId)}
+            options={[
+              { value: 'claude', label: 'Claude' },
+              { value: 'codex', label: 'Codex' }
+            ]}
+          />
+        </div>
+
         <div className="settings-row">
           <div>
             <div className="settings-label">Run routines in the background</div>

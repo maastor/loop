@@ -11,6 +11,7 @@ const routine: Routine = {
   name: 'Morning issue triage',
   prompt: 'Do the thing.',
   dir: '~/work/app',
+  agent: 'claude',
   model: 'sonnet',
   enabled: true,
   schedule: { freq: 'daily', time: '09:00', days: [], everyHours: 0 }

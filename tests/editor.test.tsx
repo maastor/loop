@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { Editor } from '@renderer/screens/Editor'
 import { buildRoutineEdits } from '@renderer/screens/routine-editor-state'
+import { useStore } from '@renderer/store'
 
 // Minimal stub of the preload `window.api` surface used by the store.
 function stubApi(): void {
@@ -30,6 +31,9 @@ function stubApi(): void {
 beforeEach(() => {
   cleanup()
   stubApi()
+  useStore.setState({
+    settings: { ...useStore.getState().settings, defaultAgent: 'claude' }
+  })
 })
 
 describe('Editor', () => {
@@ -56,6 +60,22 @@ describe('Editor', () => {
     expect(screen.getByText(/Weekdays at 9 AM/)).toBeTruthy()
   })
 
+  it('uses the configured default agent and preserves per-agent model drafts', () => {
+    useStore.setState({
+      settings: { ...useStore.getState().settings, defaultAgent: 'codex' }
+    })
+    render(<Editor routine={null} onClose={() => {}} />)
+
+    const codexModel = screen.getByPlaceholderText('gpt-5.5') as HTMLInputElement
+    expect(codexModel.value).toBe('gpt-5.5')
+    fireEvent.change(codexModel, { target: { value: 'gpt-5.5-pro' } })
+
+    fireEvent.click(screen.getByText('Claude'))
+    expect(screen.getByText('Sonnet')).toBeTruthy()
+    fireEvent.click(screen.getByText('Codex'))
+    expect((screen.getByPlaceholderText('gpt-5.5') as HTMLInputElement).value).toBe('gpt-5.5-pro')
+  })
+
   it('calls onClose when Cancel is clicked', () => {
     const onClose = vi.fn()
     render(<Editor routine={null} onClose={onClose} />)
@@ -76,6 +96,7 @@ describe('Editor', () => {
         name: '  Nightly audit  ',
         prompt: '  Check deps  ',
         dir: '   ',
+        agent: 'claude',
         model: 'sonnet',
         schedule: { freq: 'daily', time: '22:00', days: [], everyHours: 0 },
         permissionMode: '',
@@ -85,6 +106,7 @@ describe('Editor', () => {
       name: 'Nightly audit',
       prompt: 'Check deps',
       dir: '~',
+      agent: 'claude',
       model: 'sonnet',
       schedule: { freq: 'daily', time: '22:00', days: [], everyHours: 0 },
       permissionMode: undefined,

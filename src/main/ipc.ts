@@ -7,7 +7,7 @@ import type { Routine, Tweaks, Settings } from '@shared/types'
 import { uid } from '@shared/schedule'
 import type { Store } from '@core/persistence'
 import { executeRoutine } from '@core/scheduler'
-import { createRunningRun } from '@core/claude-runner'
+import { createRunningRun } from '@core/agent-runner'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
@@ -52,6 +52,7 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
       name: input.name,
       prompt: input.prompt,
       dir: input.dir,
+      agent: input.agent,
       model: input.model,
       schedule: input.schedule,
       enabled: input.enabled ?? true,

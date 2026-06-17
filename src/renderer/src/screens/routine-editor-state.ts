@@ -1,7 +1,7 @@
 import React from 'react'
 import { useStore } from '../store'
 import { parseNL, scheduleToNL, computeNextRun, MODELS } from '@shared/schedule'
-import type { Routine, Schedule, ModelId, PermissionMode } from '@shared/types'
+import type { AgentId, Routine, Schedule, ModelId, PermissionMode } from '@shared/types'
 
 export const EDITOR_DAYS: { v: number; l: string }[] = [
   { v: 1, l: 'Mon' },
@@ -21,6 +21,7 @@ export function buildRoutineEdits({
   name,
   prompt,
   dir,
+  agent,
   model,
   schedule,
   permissionMode,
@@ -29,7 +30,8 @@ export function buildRoutineEdits({
   name: string
   prompt: string
   dir: string
-  model: ModelId
+  agent: AgentId
+  model: string
   schedule: Schedule
   permissionMode: PermissionMode | ''
   grace: string
@@ -38,6 +40,7 @@ export function buildRoutineEdits({
     name: name.trim(),
     prompt: prompt.trim(),
     dir: dir.trim() || '~',
+    agent,
     model,
     schedule,
     permissionMode: permissionMode || undefined,
@@ -59,8 +62,10 @@ export function useRoutineEditorState({
   setPrompt: React.Dispatch<React.SetStateAction<string>>
   dir: string
   setDir: React.Dispatch<React.SetStateAction<string>>
-  model: ModelId
-  setModel: React.Dispatch<React.SetStateAction<ModelId>>
+  agent: AgentId
+  setAgent: (agent: AgentId) => void
+  model: string
+  setModel: (model: string) => void
   permissionMode: PermissionMode | ''
   setPermissionMode: React.Dispatch<React.SetStateAction<PermissionMode | ''>>
   grace: string
@@ -81,12 +86,21 @@ export function useRoutineEditorState({
 } {
   const createRoutine = useStore((s) => s.createRoutine)
   const updateRoutine = useStore((s) => s.updateRoutine)
+  const defaultAgent = useStore((s) => s.settings.defaultAgent)
   const isNew = !routine
 
   const [name, setName] = React.useState(routine ? routine.name : '')
   const [prompt, setPrompt] = React.useState(routine ? routine.prompt : '')
   const [dir, setDir] = React.useState(routine ? routine.dir : '~')
-  const [model, setModel] = React.useState<ModelId>(routine ? routine.model : 'sonnet')
+  const [agent, setAgent] = React.useState<AgentId>(routine?.agent ?? defaultAgent)
+  const [claudeModel, setClaudeModel] = React.useState<ModelId>(
+    routine?.agent === 'claude' && MODELS.some((entry) => entry.id === routine.model)
+      ? (routine.model as ModelId)
+      : 'sonnet'
+  )
+  const [codexModel, setCodexModel] = React.useState(
+    routine?.agent === 'codex' ? routine.model : 'gpt-5.5'
+  )
   // Empty string inherits the global default from Settings.
   const [permissionMode, setPermissionMode] = React.useState<PermissionMode | ''>(
     routine?.permissionMode ?? ''
@@ -133,9 +147,24 @@ export function useRoutineEditorState({
     patchSchedule({ days })
   }
 
-  const valid = !!name.trim() && !!prompt.trim() && (nlState !== 'bad' || structured)
+  const valid =
+    !!name.trim() &&
+    !!prompt.trim() &&
+    !!(agent === 'claude' ? claudeModel : codexModel).trim() &&
+    (nlState !== 'bad' || structured)
   const preview = computeNextRun(schedule, new Date())
-  const modelDesc = MODELS.find((m) => m.id === model)?.desc
+  const model = agent === 'claude' ? claudeModel : codexModel
+  const setModel = (value: string): void => {
+    if (agent === 'claude') {
+      setClaudeModel(value as ModelId)
+    } else {
+      setCodexModel(value)
+    }
+  }
+  const modelDesc =
+    agent === 'claude'
+      ? MODELS.find((entry) => entry.id === model)?.desc
+      : 'Passed to codex exec --model.'
 
   const chooseDir = async (): Promise<void> => {
     const picked = await window.api.dialog.selectDirectory()
@@ -152,6 +181,7 @@ export function useRoutineEditorState({
       name,
       prompt,
       dir,
+      agent,
       model,
       schedule,
       permissionMode,
@@ -171,6 +201,8 @@ export function useRoutineEditorState({
     setPrompt,
     dir,
     setDir,
+    agent,
+    setAgent,
     model,
     setModel,
     permissionMode,

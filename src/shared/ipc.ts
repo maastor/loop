@@ -1,5 +1,5 @@
 // shared/ipc.ts — IPC channel name constants, shared by main and preload.
-import type { ModelId, PermissionMode, Schedule } from './types'
+import type { AgentId, PermissionMode, Schedule } from './types'
 
 export const IPC = {
   routinesList: 'routines:list',
@@ -35,7 +35,8 @@ export type RoutineCreateInput = {
   name: string
   prompt: string
   dir: string
-  model: ModelId
+  agent: AgentId
+  model: string
   schedule: Schedule
   enabled?: boolean
   permissionMode?: PermissionMode

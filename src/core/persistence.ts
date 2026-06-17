@@ -26,7 +26,13 @@ function normalize(data: Partial<AppData> | null): AppData {
   }
   return {
     version: APP_DATA_VERSION,
-    routines: Array.isArray(data.routines) ? data.routines : base.routines,
+    routines: Array.isArray(data.routines)
+      ? data.routines.map((routine) => ({
+          ...routine,
+          // Persisted v1 routines predate agent selection and always ran Claude.
+          agent: routine.agent === 'codex' ? 'codex' : 'claude'
+        }))
+      : base.routines,
     runs: Array.isArray(data.runs) ? data.runs : [],
     tweaks: { ...base.tweaks, ...data.tweaks },
     settings: { ...base.settings, ...data.settings }
