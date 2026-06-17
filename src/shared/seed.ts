@@ -1,11 +1,12 @@
 // shared/seed.ts — first-run seed data. Routines ported from project/app/data.js.
-// Runs are intentionally empty: real runs are produced by executing Claude Code.
+// Runs are intentionally empty: real runs are produced by executing coding agents.
 import type { AppData, Routine, Tweaks, Settings } from './types'
 
 export const seedRoutines: Routine[] = [
   {
     id: 'rt-triage',
     name: 'Morning issue triage',
+    agent: 'claude',
     model: 'sonnet',
     enabled: false,
     dir: '~',
@@ -16,6 +17,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-deps',
     name: 'Nightly dependency audit',
+    agent: 'claude',
     model: 'sonnet',
     enabled: false,
     dir: '~',
@@ -26,6 +28,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-changelog',
     name: 'Changelog draft',
+    agent: 'claude',
     model: 'opus',
     enabled: false,
     dir: '~',
@@ -36,6 +39,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-flaky',
     name: 'Flaky test hunter',
+    agent: 'claude',
     model: 'haiku',
     enabled: false,
     dir: '~',
@@ -46,6 +50,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-docs',
     name: 'Docs link checker',
+    agent: 'claude',
     model: 'haiku',
     enabled: false,
     dir: '~',
@@ -64,6 +69,7 @@ export const defaultTweaks: Tweaks = {
 }
 
 export const defaultSettings: Settings = {
+  defaultAgent: 'claude',
   daemonEnabled: false,
   pausedAll: false,
   defaultPermissionMode: 'bypass',

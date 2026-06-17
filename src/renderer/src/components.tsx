@@ -1,6 +1,6 @@
 // renderer/src/components.tsx — shared UI primitives, ported from project/app/components.jsx.
 import React from 'react'
-import type { RunStatus, Change, TranscriptEntry, Run, ModelId } from '@shared/types'
+import type { AgentId, RunStatus, Change, TranscriptEntry, Run } from '@shared/types'
 import { MODELS } from '@shared/schedule'
 import { fmtDur, fmtCost, fmtTokens } from '@shared/format'
 import { Icon, type IconName } from './lib/icons'
@@ -146,7 +146,11 @@ export function Btn({
   )
 }
 
-export function ModelChip({ model }: { model: ModelId }): React.JSX.Element {
+export function AgentChip({ agent }: { agent: AgentId }): React.JSX.Element {
+  return <span className="chip mono">{agent === 'claude' ? 'Claude' : 'Codex'}</span>
+}
+
+export function ModelChip({ model }: { model: string }): React.JSX.Element {
   return <span className="chip mono">{MODELS.find((m) => m.id === model)?.label || model}</span>
 }
 

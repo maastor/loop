@@ -1,7 +1,7 @@
 {
   "name": "loop",
   "version": "0.1.6",
-  "description": "Claude Code Routines Manager — schedule, run, and track headless Claude Code sessions",
+  "description": "Coding Agent Routines Manager — schedule, run, and track headless agent sessions",
   "license": "MIT",
   "author": "loop",
   "main": "./out/main/index.js",

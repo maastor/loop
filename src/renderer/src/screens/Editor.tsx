@@ -2,9 +2,9 @@
 // Ported from project/app/screens-editor.jsx (EditorSheet).
 import React from 'react'
 import { Btn, Icon, Seg } from '../components'
-import { describeSchedule, MODELS, PERMISSION_MODES } from '@shared/schedule'
+import { describeSchedule, PERMISSION_MODES } from '@shared/schedule'
 import { fmtDateTime } from '@shared/format'
-import type { Routine, Schedule, ModelId, PermissionMode } from '@shared/types'
+import type { AgentId, Routine, Schedule, PermissionMode } from '@shared/types'
 import { EDITOR_DAYS, useRoutineEditorState } from './routine-editor-state'
 
 export function Editor({
@@ -22,6 +22,8 @@ export function Editor({
     setPrompt,
     dir,
     setDir,
+    agent,
+    setAgent,
     model,
     setModel,
     permissionMode,
@@ -35,6 +37,8 @@ export function Editor({
     setStructured,
     valid,
     preview,
+    models,
+    modelsLoading,
     modelDesc,
     onNlChange,
     patchSchedule,
@@ -90,7 +94,7 @@ export function Editor({
                 className="textarea mono"
                 rows={5}
                 value={prompt}
-                placeholder="What should Claude Code do each time this runs?"
+                placeholder="What should the coding agent do each time this runs?"
                 onChange={(e) => setPrompt(e.target.value)}
               />
             </div>
@@ -197,34 +201,55 @@ export function Editor({
             )}
           </div>
 
-          <div className="field-row">
-            <label className="field" style={{ flex: 1.6 }}>
-              <span className="field-label mono">working directory</span>
-              <div className="dir-wrap">
-                <Icon name="folder" size={14} style={{ color: 'var(--text-3)' }} />
-                <input
-                  className="input mono dir-input"
-                  value={dir}
-                  onChange={(e) => setDir(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="link-btn mono"
-                  style={{ flexShrink: 0 }}
-                  onClick={() => void chooseDir()}
-                >
-                  Browse…
-                </button>
-              </div>
-            </label>
-            <div className="field" style={{ flex: 1 }}>
-              <span className="field-label mono">model</span>
-              <Seg
-                value={model}
-                onChange={(v) => setModel(v as ModelId)}
-                options={MODELS.map((m) => ({ value: m.id, label: m.label }))}
+          <label className="field">
+            <span className="field-label mono">working directory</span>
+            <div className="dir-wrap">
+              <Icon name="folder" size={14} style={{ color: 'var(--text-3)' }} />
+              <input
+                className="input mono dir-input"
+                value={dir}
+                onChange={(e) => setDir(e.target.value)}
               />
-              <span className="field-hint">{modelDesc}</span>
+              <button
+                type="button"
+                className="link-btn mono"
+                style={{ flexShrink: 0 }}
+                onClick={() => void chooseDir()}
+              >
+                Browse…
+              </button>
+            </div>
+          </label>
+
+          <div className="field-row">
+            <div className="field" style={{ flex: 1 }}>
+              <span className="field-label mono">agent</span>
+              <Seg
+                value={agent}
+                onChange={(value) => setAgent(value as AgentId)}
+                options={[
+                  { value: 'claude', label: 'Claude' },
+                  { value: 'codex', label: 'Codex' }
+                ]}
+              />
+              <span className="field-hint">CLI used to execute this routine.</span>
+            </div>
+            <div className="field" style={{ flex: 1.6 }}>
+              <span className="field-label mono">model</span>
+              <select
+                className="select model-select mono"
+                aria-label="Model"
+                value={model}
+                disabled={modelsLoading && models.length === 0}
+                onChange={(event) => setModel(event.target.value)}
+              >
+                {models.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.label}
+                  </option>
+                ))}
+              </select>
+              {modelDesc ? <span className="field-hint">{modelDesc}</span> : null}
             </div>
           </div>
 
@@ -247,11 +272,11 @@ export function Editor({
             </div>
             <label className="field" style={{ flex: 1 }}>
               <span className="field-label mono">catch-up window</span>
-              <div className="dir-wrap">
+              <div className="numeric-field">
                 <input
                   type="number"
                   min={0}
-                  className="input mono"
+                  className="numeric-input mono"
                   placeholder="default"
                   value={grace}
                   onChange={(e) => setGrace(e.target.value)}

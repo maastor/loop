@@ -1,5 +1,14 @@
 import React from 'react'
-import { Btn, EmptyState, Icon, ModelChip, ScreenHead, StatusDot, Toggle } from '../components'
+import {
+  AgentChip,
+  Btn,
+  EmptyState,
+  Icon,
+  ModelChip,
+  ScreenHead,
+  StatusDot,
+  Toggle
+} from '../components'
 import { computeNextRun, describeSchedule } from '@shared/schedule'
 import { fmtTime, relTime, relUntil } from '@shared/format'
 import type { Routine, RoutineGroupBy, RoutineSortBy, Run } from '@shared/types'
@@ -65,7 +74,7 @@ export function NoRoutines({ onCreate }: { onCreate: () => void }): React.JSX.El
     <EmptyState
       icon="routines"
       title="No routines yet"
-      body="A routine is a prompt Claude Code runs on a schedule — triage issues every morning, audit dependencies nightly."
+      body="A routine is a prompt a coding agent runs on a schedule — triage issues every morning, audit dependencies nightly."
     >
       <Btn primary icon="plus" onClick={onCreate}>
         Create your first routine
@@ -257,6 +266,7 @@ function RoutineCards({
                   <div className="rt-card-foot">
                     <LastRunCell run={last} now={now} onOpen={onOpenRun} />
                     <div style={{ flex: 1 }} />
+                    <AgentChip agent={routine.agent} />
                     <ModelChip model={routine.model} />
                     <Btn
                       ghost
@@ -323,6 +333,7 @@ function RoutineTable({
                     </td>
                     <td className="mono">{describeSchedule(routine.schedule)}</td>
                     <td>
+                      <AgentChip agent={routine.agent} />
                       <ModelChip model={routine.model} />
                     </td>
                     <td>

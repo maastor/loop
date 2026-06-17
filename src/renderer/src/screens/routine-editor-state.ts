@@ -1,7 +1,15 @@
 import React from 'react'
 import { useStore } from '../store'
-import { parseNL, scheduleToNL, computeNextRun, MODELS } from '@shared/schedule'
-import type { Routine, Schedule, ModelId, PermissionMode } from '@shared/types'
+import { parseNL, scheduleToNL, computeNextRun } from '@shared/schedule'
+import { bundledModelCatalog, DEFAULT_AGENT_MODEL } from '@shared/agent-models'
+import type {
+  AgentId,
+  AgentModel,
+  AgentModelCatalog,
+  Routine,
+  Schedule,
+  PermissionMode
+} from '@shared/types'
 
 export const EDITOR_DAYS: { v: number; l: string }[] = [
   { v: 1, l: 'Mon' },
@@ -21,6 +29,7 @@ export function buildRoutineEdits({
   name,
   prompt,
   dir,
+  agent,
   model,
   schedule,
   permissionMode,
@@ -29,7 +38,8 @@ export function buildRoutineEdits({
   name: string
   prompt: string
   dir: string
-  model: ModelId
+  agent: AgentId
+  model: string
   schedule: Schedule
   permissionMode: PermissionMode | ''
   grace: string
@@ -38,6 +48,7 @@ export function buildRoutineEdits({
     name: name.trim(),
     prompt: prompt.trim(),
     dir: dir.trim() || '~',
+    agent,
     model,
     schedule,
     permissionMode: permissionMode || undefined,
@@ -59,8 +70,10 @@ export function useRoutineEditorState({
   setPrompt: React.Dispatch<React.SetStateAction<string>>
   dir: string
   setDir: React.Dispatch<React.SetStateAction<string>>
-  model: ModelId
-  setModel: React.Dispatch<React.SetStateAction<ModelId>>
+  agent: AgentId
+  setAgent: (agent: AgentId) => void
+  model: string
+  setModel: (model: string) => void
   permissionMode: PermissionMode | ''
   setPermissionMode: React.Dispatch<React.SetStateAction<PermissionMode | ''>>
   grace: string
@@ -72,6 +85,8 @@ export function useRoutineEditorState({
   setStructured: React.Dispatch<React.SetStateAction<boolean>>
   valid: boolean
   preview: Date | null
+  models: AgentModel[]
+  modelsLoading: boolean
   modelDesc: string | undefined
   onNlChange: (value: string) => void
   patchSchedule: (patch: Partial<Schedule>) => void
@@ -81,12 +96,24 @@ export function useRoutineEditorState({
 } {
   const createRoutine = useStore((s) => s.createRoutine)
   const updateRoutine = useStore((s) => s.updateRoutine)
+  const defaultAgent = useStore((s) => s.settings.defaultAgent)
   const isNew = !routine
 
   const [name, setName] = React.useState(routine ? routine.name : '')
   const [prompt, setPrompt] = React.useState(routine ? routine.prompt : '')
   const [dir, setDir] = React.useState(routine ? routine.dir : '~')
-  const [model, setModel] = React.useState<ModelId>(routine ? routine.model : 'sonnet')
+  const [agent, setAgent] = React.useState<AgentId>(routine?.agent ?? defaultAgent)
+  const [claudeModel, setClaudeModel] = React.useState(
+    routine?.agent === 'claude' ? routine.model : DEFAULT_AGENT_MODEL.claude
+  )
+  const [codexModel, setCodexModel] = React.useState(
+    routine?.agent === 'codex' ? routine.model : DEFAULT_AGENT_MODEL.codex
+  )
+  const [modelCatalogs, setModelCatalogs] = React.useState<Record<AgentId, AgentModelCatalog>>({
+    claude: bundledModelCatalog('claude'),
+    codex: bundledModelCatalog('codex')
+  })
+  const [modelsLoading, setModelsLoading] = React.useState(true)
   // Empty string inherits the global default from Settings.
   const [permissionMode, setPermissionMode] = React.useState<PermissionMode | ''>(
     routine?.permissionMode ?? ''
@@ -100,6 +127,36 @@ export function useRoutineEditorState({
   const [nl, setNl] = React.useState(routine ? scheduleToNL(routine.schedule) : '')
   const [nlState, setNlState] = React.useState<NlState>(routine ? 'ok' : 'idle')
   const [structured, setStructured] = React.useState(false)
+
+  React.useEffect(() => {
+    let cancelled = false
+    Promise.all([window.api.agents.models('claude'), window.api.agents.models('codex')])
+      .then(([claude, codex]) => {
+        if (cancelled) {
+          return
+        }
+        setModelCatalogs({ claude, codex })
+        if (!routine) {
+          setClaudeModel((current) =>
+            claude.models.some((entry) => entry.id === current) ? current : claude.defaultModelId
+          )
+          setCodexModel((current) =>
+            codex.models.some((entry) => entry.id === current) ? current : codex.defaultModelId
+          )
+        }
+      })
+      .catch(() => {
+        // The bundled catalogs are already visible; keep the editor usable if IPC fails.
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setModelsLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [routine])
 
   const onNlChange = (value: string): void => {
     setNl(value)
@@ -133,9 +190,30 @@ export function useRoutineEditorState({
     patchSchedule({ days })
   }
 
-  const valid = !!name.trim() && !!prompt.trim() && (nlState !== 'bad' || structured)
+  const valid =
+    !!name.trim() &&
+    !!prompt.trim() &&
+    !!(agent === 'claude' ? claudeModel : codexModel).trim() &&
+    (nlState !== 'bad' || structured)
   const preview = computeNextRun(schedule, new Date())
-  const modelDesc = MODELS.find((m) => m.id === model)?.desc
+  const model = agent === 'claude' ? claudeModel : codexModel
+  const catalog = modelCatalogs[agent]
+  const models = catalog.models.some((entry) => entry.id === model)
+    ? catalog.models
+    : [{ id: model, label: model }, ...catalog.models]
+  const setModel = (value: string): void => {
+    if (agent === 'claude') {
+      setClaudeModel(value)
+    } else {
+      setCodexModel(value)
+    }
+  }
+  const selectedModel = models.find((entry) => entry.id === model)
+  const modelDesc = modelsLoading
+    ? 'Loading models from installed agents…'
+    : catalog.error
+      ? `Using bundled models — ${catalog.error}`
+      : selectedModel?.description
 
   const chooseDir = async (): Promise<void> => {
     const picked = await window.api.dialog.selectDirectory()
@@ -152,6 +230,7 @@ export function useRoutineEditorState({
       name,
       prompt,
       dir,
+      agent,
       model,
       schedule,
       permissionMode,
@@ -171,6 +250,8 @@ export function useRoutineEditorState({
     setPrompt,
     dir,
     setDir,
+    agent,
+    setAgent,
     model,
     setModel,
     permissionMode,
@@ -184,6 +265,8 @@ export function useRoutineEditorState({
     setStructured,
     valid,
     preview,
+    models,
+    modelsLoading,
     modelDesc,
     onNlChange,
     patchSchedule,

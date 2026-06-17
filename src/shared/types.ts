@@ -1,7 +1,22 @@
 // shared/types.ts — core data model for loop, shared across main, daemon, preload, renderer.
 // Pure types only — no node/electron imports.
 
+export type AgentId = 'claude' | 'codex'
 export type ModelId = 'sonnet' | 'opus' | 'haiku'
+
+export type AgentModel = {
+  id: string
+  label: string
+  description?: string
+}
+
+export type AgentModelCatalog = {
+  models: AgentModel[]
+  defaultModelId: string
+  source: 'agent' | 'bundled'
+  /** Present when live discovery failed and the bundled list is being used. */
+  error?: string
+}
 
 /**
  * How the headless `claude` run treats tool-permission prompts. Routines are
@@ -34,7 +49,9 @@ export type Routine = {
   prompt: string
   /** Working directory; may contain a leading ~. */
   dir: string
-  model: ModelId
+  agent: AgentId
+  /** Claude model alias or Codex model id. */
+  model: string
   enabled: boolean
   schedule: Schedule
   /** Per-routine permission mode. Undefined → inherit Settings.defaultPermissionMode. */
@@ -101,6 +118,8 @@ export type Tweaks = {
 }
 
 export type Settings = {
+  /** Agent preselected when creating a routine. */
+  defaultAgent: AgentId
   /** Whether routines should run in the background via the launchd daemon. */
   daemonEnabled: boolean
   /** Global pause — disables all scheduling without touching per-routine enabled flags. */

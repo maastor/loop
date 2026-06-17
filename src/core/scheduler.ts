@@ -7,7 +7,7 @@
 import type { Routine, Run, Settings } from '@shared/types'
 import { scheduleTimesForDay } from '@shared/schedule'
 import type { Store } from './persistence'
-import { runClaude, createRunningRun } from './claude-runner'
+import { runAgent, createRunningRun } from './agent-runner'
 
 const DEFAULT_TICK_MS = 60_000
 /**
@@ -51,20 +51,21 @@ export function latestOccurrenceAtOrBefore(routine: Routine, now: Date): Date | 
 
 export type SchedulerOptions = {
   tickMs?: number
-  /** Override executor (used in tests). Defaults to runClaude-backed execution. */
+  /** Override executor (used in tests). Defaults to agent-backed execution. */
   execute?: (routine: Routine, run: Run, store: Store) => Promise<void>
   /** Called after each tick with the list of routine ids fired this tick. */
   onFire?: (routineIds: string[]) => void
   log?: (msg: string) => void
 }
 
-/** Execute a routine end-to-end: stream Claude output into the run record. */
+/** Execute a routine end-to-end: stream agent output into the run record. */
 export async function executeRoutine(routine: Routine, run: Run, store: Store): Promise<void> {
   const settings = store.getSettings()
   const permissionMode = routine.permissionMode ?? settings.defaultPermissionMode ?? 'bypass'
   const timeoutMs = (settings.runTimeoutMinutes ?? 0) * 60 * 1000
-  const result = await runClaude(
-    { prompt: routine.prompt, dir: routine.dir, model: routine.model, permissionMode, timeoutMs },
+  const result = await runAgent(
+    routine,
+    { permissionMode, timeoutMs },
     {
       onTranscript: (_entry, all) => {
         store.updateRun(run.id, { transcript: all })

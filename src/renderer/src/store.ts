@@ -45,6 +45,7 @@ export const useStore = create<LoopState>((set, get) => ({
     routineSortBy: 'name'
   },
   settings: {
+    defaultAgent: 'claude',
     daemonEnabled: false,
     pausedAll: false,
     defaultPermissionMode: 'bypass',

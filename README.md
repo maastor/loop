@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <strong>Scheduled routines for Claude Code.</strong><br/>
-  Give Claude Code a prompt and a schedule — triage issues every morning, audit dependencies nightly, draft a changelog every Friday — and watch every run on a calendar, in history, with full transcripts.
+  <strong>Scheduled routines for Claude Code and Codex.</strong><br/>
+  Give a coding agent a prompt and a schedule — triage issues every morning, audit dependencies nightly, draft a changelog every Friday — and watch every run on a calendar, in history, with full transcripts.
 </p>
 
 <h3 align="center"><a href="https://github.com/maxi-scala/loop/releases/latest"><ins>Download Loop</ins></a></h3>
@@ -43,7 +43,7 @@ Natural language (`every weekday at 9am`, `every 6 hours`) that parses live, wit
 
 ### ⚡ Real headless runs
 
-Every run invokes the real `claude` CLI (`claude -p`) in the routine's directory and streams the live transcript — no mocks.
+Every run invokes the selected agent CLI (`claude -p` or `codex exec`) in the routine's directory and streams the live transcript — no mocks.
 
 </td>
 <td width="50%" valign="top">
@@ -76,7 +76,7 @@ An optional macOS background agent fires your routines on schedule even when Loo
 
 ## Requirements
 
-The [**Claude Code CLI**](https://docs.claude.com/en/docs/claude-code) must be installed and authenticated — that's what your routines run.
+Install and authenticate the CLI for each agent you use: [**Claude Code**](https://docs.claude.com/en/docs/claude-code) and/or [**Codex**](https://developers.openai.com/codex/cli/).
 
 ## Install
 
@@ -106,13 +106,13 @@ npm run dist:mac   # build a local .dmg
 
 An Electron app (electron-vite + React 18 + TypeScript + zustand) with four entry points:
 
-| Layer                          | What it does                                                                                                                                                  |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`src/shared`**               | Pure types + the schedule / natural-language / formatting logic and seed data.                                                                                |
-| **`src/core`**                 | Node-only `Store` (atomic JSON persistence), `claude-runner` (real `claude -p` execution), and `Scheduler` (the tick loop). Shared by the app and the daemon. |
-| **`src/main` · `src/preload`** | Electron main process (window, tray, IPC, background-agent install) and the typed `window.api` bridge.                                                        |
-| **`src/renderer`**             | React UI; state mirrors the main process over IPC.                                                                                                            |
-| **`src/daemon`**               | Standalone scheduler launched by a macOS LaunchAgent so routines fire when the app is quit.                                                                   |
+| Layer                          | What it does                                                                                                                                                               |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`src/shared`**               | Pure types + the schedule / natural-language / formatting logic and seed data.                                                                                             |
+| **`src/core`**                 | Node-only `Store` (atomic JSON persistence), agent runners (real `claude -p` / `codex exec` execution), and `Scheduler` (the tick loop). Shared by the app and the daemon. |
+| **`src/main` · `src/preload`** | Electron main process (window, tray, IPC, background-agent install) and the typed `window.api` bridge.                                                                     |
+| **`src/renderer`**             | React UI; state mirrors the main process over IPC.                                                                                                                         |
+| **`src/daemon`**               | Standalone scheduler launched by a macOS LaunchAgent so routines fire when the app is quit.                                                                                |
 
 State lives in a single JSON file at `~/Library/Application Support/loop/loop-data.json`. Deeper notes — including the cross-process scheduling model and environment gotchas — are in **[CLAUDE.md](./CLAUDE.md)**; packaging and release details are in **[BUILD.md](./BUILD.md)**.
 
