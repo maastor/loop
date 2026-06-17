@@ -1,45 +1,13 @@
-// core/persistence.ts — atomic JSON store with backup rotation.
-// Modeled on orca's persistence (src/main/persistence.ts): write to a temp file,
-// fsync, atomic rename, and keep a small ring of timestamped backups.
-//
-// Both the Electron main process and the standalone daemon use this. To stay safe
-// across two writers, every mutation reloads the on-disk state first (read-modify-
-// write) so the last writer doesn't clobber unrelated fields it never saw.
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync, statSync } from 'fs'
+// Domain-facing application store shared by Electron main and daemon.
 import type { AppData, Routine, Run, Tweaks, Settings } from '@shared/types'
-import { defaultAppData, APP_DATA_VERSION } from '@shared/seed'
-import { dataDir, dataFile, backupFile } from './paths'
-
-const MAX_BACKUPS = 5
-
-function ensureDir(): void {
-  const dir = dataDir()
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true })
-  }
-}
-
-function normalize(data: Partial<AppData> | null): AppData {
-  const base = defaultAppData()
-  if (!data || typeof data !== 'object') {
-    return base
-  }
-  return {
-    version: APP_DATA_VERSION,
-    routines: Array.isArray(data.routines) ? data.routines : base.routines,
-    runs: Array.isArray(data.runs) ? data.runs : [],
-    tweaks: { ...base.tweaks, ...data.tweaks },
-    settings: { ...base.settings, ...data.settings }
-  }
-}
+import { AppDataFile, type AppDataPersistence } from './app-data-file'
 
 export class Store {
   private state: AppData
-  private lastMtimeMs = 0
   private changeListeners = new Set<() => void>()
 
-  constructor() {
-    this.state = this.readFromDisk()
+  constructor(private readonly persistence: AppDataPersistence = new AppDataFile()) {
+    this.state = this.persistence.load()
   }
 
   /**
@@ -63,92 +31,17 @@ export class Store {
     }
   }
 
-  private readFromDisk(): AppData {
-    const file = dataFile()
-    if (!existsSync(file)) {
-      const seeded = defaultAppData()
-      this.writeToDisk(seeded)
-      return seeded
-    }
-    try {
-      const raw = readFileSync(file, 'utf-8')
-      this.lastMtimeMs = statSync(file).mtimeMs
-      return normalize(JSON.parse(raw))
-    } catch {
-      // Try the most recent backup before giving up to defaults.
-      for (let i = 0; i < MAX_BACKUPS; i++) {
-        try {
-          const bak = backupFile(i)
-          if (existsSync(bak)) {
-            return normalize(JSON.parse(readFileSync(bak, 'utf-8')))
-          }
-        } catch {
-          /* try next */
-        }
-      }
-      return defaultAppData()
-    }
-  }
-
-  /** Reload from disk if another process has written since our last read. */
-  private reloadIfStale(): void {
-    const file = dataFile()
-    try {
-      if (!existsSync(file)) {
-        return
-      }
-      const mtime = statSync(file).mtimeMs
-      if (mtime > this.lastMtimeMs) {
-        this.state = this.readFromDisk()
-      }
-    } catch {
-      /* keep in-memory state */
-    }
-  }
-
-  private rotateBackups(): void {
-    const file = dataFile()
-    if (!existsSync(file)) {
-      return
-    }
-    try {
-      const last = backupFile(MAX_BACKUPS - 1)
-      if (existsSync(last)) {
-        // drop the oldest by shifting; simplest is to just overwrite ring slots
-      }
-      for (let i = MAX_BACKUPS - 1; i > 0; i--) {
-        const src = backupFile(i - 1)
-        if (existsSync(src)) {
-          renameSync(src, backupFile(i))
-        }
-      }
-      // copy current file content into slot 0
-      writeFileSync(backupFile(0), readFileSync(file))
-    } catch {
-      /* backups are best-effort */
-    }
-  }
-
-  private writeToDisk(data: AppData): void {
-    ensureDir()
-    const file = dataFile()
-    this.rotateBackups()
-    const tmp = `${file}.tmp`
-    writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8')
-    renameSync(tmp, file)
-    try {
-      this.lastMtimeMs = statSync(file).mtimeMs
-    } catch {
-      /* ignore */
-    }
-  }
-
   private mutate<T>(fn: (state: AppData) => T): T {
     this.reloadIfStale()
     const result = fn(this.state)
-    this.writeToDisk(this.state)
+    this.persistence.save(this.state)
     this.emitChange()
     return result
+  }
+
+  /** Reload before every access so main and daemon observe each other's writes. */
+  private reloadIfStale(): void {
+    this.state = this.persistence.reloadIfChanged(this.state)
   }
 
   // ── reads ──────────────────────────────────────────────────
