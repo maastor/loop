@@ -1,5 +1,3 @@
-// renderer/src/screens/History.tsx — run history grouped by day with status/routine filters.
-// Ported from project/app/screens-history.jsx (HistoryScreen).
 import React from 'react'
 import { useStore } from '../store'
 import { ScreenHead, Seg, StatusDot, RunStats, EmptyState, Icon } from '../components'
@@ -21,7 +19,6 @@ export function HistoryScreen({ nav }: ScreenProps): React.JSX.Element {
       (routineFilter === 'all' || r.routineId === routineFilter)
   )
 
-  // group by day
   const groups = React.useMemo(() => {
     const m = new Map<string, { date: Date; runs: typeof filtered }>()
     for (const r of filtered) {

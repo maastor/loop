@@ -1,8 +1,3 @@
-// main/launchd.ts — install/uninstall/status of the background LaunchAgent daemon.
-//
-// The daemon lets routines fire even when the app is fully quit. We install a
-// macOS LaunchAgent plist that runs the built `out/main/daemon.js` as plain Node
-// via the Electron binary (ELECTRON_RUN_AS_NODE=1), with RunAtLoad + KeepAlive.
 import { execFileSync } from 'child_process'
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs'
 import { dirname } from 'path'
@@ -48,7 +43,7 @@ export async function installDaemon(): Promise<DaemonStatus> {
     mkdirSync(dirname(logFile()), { recursive: true })
     writeFileSync(plistPath, xml)
 
-    // Prefer the modern bootstrap; fall back to legacy load on older systems.
+    // `load` supports macOS versions predating `bootstrap`.
     try {
       execFileSync('launchctl', ['bootstrap', guiTarget(), plistPath], { stdio: 'ignore' })
     } catch {
@@ -66,7 +61,6 @@ export async function installDaemon(): Promise<DaemonStatus> {
 
 export async function uninstallDaemon(): Promise<DaemonStatus> {
   const plistPath = launchAgentPlistPath()
-  // Unload first (tolerate "not loaded"), then remove the plist.
   try {
     execFileSync('launchctl', ['bootout', `${guiTarget()}/${LAUNCH_AGENT_LABEL}`], {
       stdio: 'ignore'

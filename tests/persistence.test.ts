@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'fs'
+import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync, utimesSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { defaultAppData } from '@shared/seed'
+import type { AppData } from '@shared/types'
+import type { AppDataPersistence } from '@core/app-data-file'
 
-// Redirect Store storage to a temp dir BEFORE importing the module that reads paths.
 let dir: string
 
 async function freshStore() {
@@ -37,6 +39,23 @@ function aRun(id: string, status: 'running' | 'success' | 'failed', start: strin
 }
 
 describe('Store', () => {
+  it('supports an in-memory persistence adapter', async () => {
+    const { Store } = await import('@core/persistence')
+    let data = defaultAppData()
+    const persistence: AppDataPersistence = {
+      load: () => structuredClone(data),
+      reloadIfChanged: (current) => current,
+      save: (next: AppData) => {
+        data = structuredClone(next)
+      }
+    }
+    const store = new Store(persistence)
+
+    store.setTweaks({ accent: '#123456' })
+
+    expect(data.tweaks.accent).toBe('#123456')
+  })
+
   it('migrates legacy routines and settings to Claude defaults', async () => {
     writeFileSync(
       join(dir, 'loop-data.json'),
@@ -80,7 +99,19 @@ describe('Store', () => {
     expect(calls).toBe(3)
     unsub()
     store.setTweaks({ accent: '#000' })
-    expect(calls).toBe(3) // no longer notified after unsubscribe
+    expect(calls).toBe(3)
+  })
+
+  it('reloads data written by another process before reads', async () => {
+    const store = await freshStore()
+    const file = join(dir, 'loop-data.json')
+    const external = JSON.parse(readFileSync(file, 'utf-8')) as AppData
+    external.tweaks.accent = '#fedcba'
+    writeFileSync(file, JSON.stringify(external), 'utf-8')
+    const future = new Date(Date.now() + 1000)
+    utimesSync(file, future, future)
+
+    expect(store.getTweaks().accent).toBe('#fedcba')
   })
 
   it('reconcileStaleRuns fails only runs older than the cutoff', async () => {
@@ -96,11 +127,11 @@ describe('Store', () => {
 
   it('recovers from a corrupt data file via backup', async () => {
     const store = await freshStore()
-    store.setTweaks({ accent: '#abcabc' }) // creates a backup of the prior good state
+    store.setTweaks({ accent: '#abcabc' })
+    store.setTweaks({ density: 'compact' })
     writeFileSync(join(dir, 'loop-data.json'), '{ not json', 'utf-8')
     const store2 = await freshStore()
-    // Should not throw and should yield usable data (from backup or defaults).
-    expect(store2.getAll().tweaks).toBeTruthy()
+    expect(store2.getTweaks().accent).toBe('#abcabc')
     expect(existsSync(join(dir, 'loop-data.json'))).toBe(true)
   })
 })

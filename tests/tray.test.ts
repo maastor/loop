@@ -90,7 +90,6 @@ describe('buildMenuModel', () => {
     const m = buildMenuModel(routines, [], settings(), NOW)
     const nextLabels = labels(m).filter((l) => /^[ABC] —/.test(l))
     expect(nextLabels).toHaveLength(2)
-    // B (10:00) before C (11:00); disabled D excluded.
     expect(nextLabels[0].startsWith('B —')).toBe(true)
     expect(nextLabels[1].startsWith('C —')).toBe(true)
   })

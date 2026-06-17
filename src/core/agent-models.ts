@@ -31,7 +31,6 @@ function uniqueModels(models: AgentModel[]): AgentModel[] {
   })
 }
 
-/** Parse the JSON emitted by `codex debug models`, matching Orca's discovery path. */
 export function parseCodexModels(output: string): AgentModel[] {
   try {
     const parsed = JSON.parse(output) as {
@@ -124,7 +123,6 @@ function discoverCodexModels(): Promise<AgentModelCatalog> {
 }
 
 export function discoverAgentModels(agent: AgentId): Promise<AgentModelCatalog> {
-  // Claude Code currently exposes stable aliases but no headless catalog command.
-  // Returning them through the same API keeps the renderer agent-agnostic.
+  // Claude Code has no headless model-catalog command.
   return agent === 'codex' ? discoverCodexModels() : Promise.resolve(bundledModelCatalog('claude'))
 }

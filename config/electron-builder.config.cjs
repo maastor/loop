@@ -2,15 +2,13 @@
 module.exports = {
   appId: 'com.loop.routines',
   productName: 'Loop',
-  // Skip native module rebuild — Loop has no native deps and rebuild slows CI.
+  // No native dependencies; rebuilding only slows CI.
   npmRebuild: false,
   directories: {
     output: 'dist',
     buildResources: 'resources'
   },
-  // App contents: bundled main/preload/renderer output, resources, and
-  // package.json. Build assets under resources/icon-source (svg, render
-  // script) are dev-only and intentionally excluded from the packaged app.
+  // icon-source contains build inputs, not runtime assets.
   files: ['out/**/*', 'resources/**/*', 'package.json', '!resources/icon-source/**/*'],
   extraResources: [
     {
@@ -21,12 +19,8 @@ module.exports = {
   mac: {
     category: 'public.app-category.developer-tools',
     icon: 'resources/build/icon.icns',
-    // CI builds are not signed with a Developer ID or notarized (no cert). We do
-    // NOT set `identity: null` because that disables even ad-hoc signing, which
-    // makes the arm64 app fail to launch with "Loop is damaged". Leaving identity
-    // unset lets electron-builder ad-hoc sign (codesign -s -) the arm64 build so
-    // it runs; downloaded copies still carry the quarantine attribute, so users
-    // must right-click → Open once (or run `xattr -dr com.apple.quarantine`).
+    // Leaving identity unset preserves electron-builder's ad-hoc arm64 signature.
+    // `identity: null` produces a bundle macOS reports as damaged.
     target: [{ target: 'dmg', arch: ['arm64', 'x64'] }],
     darkModeSupport: true,
     extendInfo: {
@@ -38,7 +32,6 @@ module.exports = {
   dmg: {
     title: '${productName} ${version}',
     artifactName: '${productName}-${version}-${arch}.${ext}',
-    // Standard "drag app to Applications" install window layout.
     window: { width: 540, height: 380 },
     contents: [
       { x: 150, y: 200, type: 'file' },

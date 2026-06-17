@@ -1,11 +1,7 @@
-// core/paths.ts — filesystem locations shared by the main process and the daemon.
-// Node-only.
 import { homedir } from 'os'
 import { join } from 'path'
 
-/** Base data directory: ~/Library/Application Support/loop (macOS). */
 export function dataDir(): string {
-  // LOOP_DATA_DIR lets tests (and advanced users) redirect storage off the real path.
   if (process.env.LOOP_DATA_DIR) {
     return process.env.LOOP_DATA_DIR
   }
@@ -26,14 +22,12 @@ export function logFile(): string {
   return join(dataDir(), 'daemon.log')
 }
 
-/** Path to the installed LaunchAgent plist. */
 export function launchAgentPlistPath(): string {
   return join(homedir(), 'Library', 'LaunchAgents', `${LAUNCH_AGENT_LABEL}.plist`)
 }
 
 export const LAUNCH_AGENT_LABEL = 'com.loop.routines.daemon'
 
-/** Expand a leading ~ to the user's home directory. */
 export function expandHome(p: string): string {
   if (p === '~') {
     return homedir()

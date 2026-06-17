@@ -1,8 +1,3 @@
-// renderer/src/TweaksPanel.tsx — floating Tweaks toggle + panel (worker unit 6).
-// Ported from project/app/tweaks-panel.jsx + main.jsx (TweaksPanel / TweakRadio / TweakColor).
-// Controls: Layout (rows/cards/table), Density (compact/comfortable), Accent color swatches.
-// All wired to store.setTweak(key, value) and reflect store.tweaks. App.tsx applies
-// tweaks.accent/density as CSS vars and uses tweaks.layout — this panel only sets them.
 import React from 'react'
 import { useStore } from './store'
 import { Icon, Seg } from './components'

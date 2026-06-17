@@ -4,7 +4,6 @@ import { Editor } from '@renderer/screens/Editor'
 import { buildRoutineEdits } from '@renderer/screens/routine-editor-state'
 import { useStore } from '@renderer/store'
 
-// Minimal stub of the preload `window.api` surface used by the store.
 function stubApi(): void {
   ;(globalThis as any).window.api = {
     agents: {
@@ -59,7 +58,6 @@ describe('Editor', () => {
     fireEvent.change(nlInput, { target: { value: 'every weekday at 9am' } })
     expect(nlInput.value).toBe('every weekday at 9am')
 
-    // Parsed successfully → the describe hint reflects the weekday schedule.
     expect(screen.getByText(/Weekdays at 9 AM/)).toBeTruthy()
   })
 

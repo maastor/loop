@@ -1,5 +1,3 @@
-// renderer/src/screens/RunDetail.tsx — run detail: meta strip (duration/cost/tokens/model/dir),
-// summary + changes, transcript. Ported from project/app/screens-history.jsx (RunDetailScreen).
 import React from 'react'
 import { useStore } from '../store'
 import {

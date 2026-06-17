@@ -1,5 +1,3 @@
-// renderer/src/screens/Settings.tsx — settings: background daemon, global pause,
-// default permission mode, missed-run grace, and per-run timeout.
 import React from 'react'
 import { useStore } from '../store'
 import { ScreenHead, Toggle, Seg } from '../components'

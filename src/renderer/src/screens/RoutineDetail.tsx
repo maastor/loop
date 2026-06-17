@@ -1,6 +1,3 @@
-// renderer/src/screens/RoutineDetail.tsx — routine detail: prompt block, stats,
-// danger-zone delete, recent runs. Ported from project/app/screens-routines.jsx
-// (RoutineDetailScreen).
 import React from 'react'
 import { useStore } from '../store'
 import {

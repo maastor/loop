@@ -3,7 +3,6 @@ import { Scheduler } from '@core/scheduler'
 import type { Store } from '@core/persistence'
 import type { Routine, Run, Settings } from '@shared/types'
 
-/** Minimal in-memory stand-in for Store covering the methods Scheduler uses. */
 function fakeStore(routines: Routine[], runs: Run[] = [], settings?: Partial<Settings>) {
   const state = {
     routines,
@@ -52,7 +51,7 @@ function hhmm(d: Date): string {
 describe('Scheduler.tick firing', () => {
   it('fires a daily routine whose time just passed', async () => {
     const now = new Date()
-    const justPassed = new Date(now.getTime() - 60_000) // 1 min ago
+    const justPassed = new Date(now.getTime() - 60_000)
     const store = fakeStore([dailyRoutine(hhmm(justPassed))])
     const fired: string[] = []
     const sched = new Scheduler(store as unknown as Store, {
@@ -87,7 +86,7 @@ describe('Scheduler.tick firing', () => {
     const stuck: Run = {
       id: 'old',
       routineId: 'rt-1',
-      start: new Date(now.getTime() - 3 * 3600_000).toISOString(), // 3h ago → stale
+      start: new Date(now.getTime() - 3 * 3600_000).toISOString(),
       durationSec: null,
       status: 'running',
       costUsd: null,
@@ -104,7 +103,7 @@ describe('Scheduler.tick firing', () => {
       }
     })
     await sched.tick(now)
-    expect(count).toBe(1) // stale running run must not wedge the routine
+    expect(count).toBe(1)
   })
 
   it('IS blocked by a genuinely recent "running" run (avoid piling on)', async () => {
@@ -113,7 +112,7 @@ describe('Scheduler.tick firing', () => {
     const active: Run = {
       id: 'active',
       routineId: 'rt-1',
-      start: new Date(now.getTime() - 30_000).toISOString(), // 30s ago → still running
+      start: new Date(now.getTime() - 30_000).toISOString(),
       durationSec: null,
       status: 'running',
       costUsd: null,
@@ -144,14 +143,12 @@ describe('Scheduler.tick firing', () => {
       }
     })
     await sched.tick(now)
-    // 2h < default 720m grace → the occurrence missed while offline still fires on wake.
     expect(count).toBe(1)
   })
 
   it('records a SKIPPED run (does not fire) when the miss is past the grace window', async () => {
     const now = new Date()
     const twoHoursAgo = new Date(now.getTime() - 2 * 3600_000)
-    // Tighten grace to 30m so a 2h-old occurrence is past it.
     const store = fakeStore([dailyRoutine(hhmm(twoHoursAgo))], [], {
       defaultMissedRunGraceMinutes: 30
     })
@@ -184,7 +181,6 @@ describe('Scheduler.tick firing', () => {
   it('honors a per-routine grace override over the global default', async () => {
     const now = new Date()
     const twoHoursAgo = new Date(now.getTime() - 2 * 3600_000)
-    // Global grace is generous, but the routine pins a tight 30m window → skip.
     const store = fakeStore([dailyRoutine(hhmm(twoHoursAgo), { missedRunGraceMinutes: 30 })], [], {
       defaultMissedRunGraceMinutes: 1440
     })

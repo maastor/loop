@@ -1,9 +1,8 @@
-import type { Change, PermissionMode, Run, Routine, TranscriptEntry } from '@shared/types'
+import type { Change, PermissionMode, Routine, TranscriptEntry } from '@shared/types'
 import { runClaude } from './claude-runner'
 import { runCodex } from './codex-runner'
 
 export type RunCallbacks = {
-  /** Called whenever a new transcript entry is produced. */
   onTranscript?: (entry: TranscriptEntry, all: TranscriptEntry[]) => void
 }
 
@@ -40,29 +39,4 @@ export function runAgent(
     },
     cb
   )
-}
-
-/** Build the in-progress Run record stored while a routine is executing. */
-export function createRunningRun(
-  routineId: string,
-  prompt: string,
-  dir: string,
-  trigger: Run['trigger']
-): Run {
-  return {
-    id: `run-${routineId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    routineId,
-    start: new Date().toISOString(),
-    durationSec: null,
-    status: 'running',
-    costUsd: null,
-    tokens: null,
-    summary: 'Run started…',
-    changes: [],
-    transcript: [
-      { role: 'user', text: prompt },
-      { role: 'result', text: `Session started in ${dir}` }
-    ],
-    trigger
-  }
 }

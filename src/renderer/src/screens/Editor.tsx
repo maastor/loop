@@ -1,5 +1,3 @@
-// renderer/src/screens/Editor.tsx — create / edit routine sheet (worker unit 3).
-// Ported from project/app/screens-editor.jsx (EditorSheet).
 import React from 'react'
 import { Btn, Icon, Seg } from '../components'
 import { describeSchedule, PERMISSION_MODES } from '@shared/schedule'

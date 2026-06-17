@@ -1,4 +1,3 @@
-// tests/history.test.tsx — HistoryScreen + RunDetailScreen render and basic interaction.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { useStore } from '@renderer/store'
@@ -42,7 +41,6 @@ const noop = (): void => {}
 describe('HistoryScreen', () => {
   it('renders the routine name and summary', () => {
     render(<HistoryScreen nav={noop} now={new Date()} openEditor={noop} />)
-    // Name appears in both the routine-filter <option> and the run row.
     expect(screen.getAllByText('Morning issue triage').length).toBeGreaterThan(0)
     expect(screen.getByText('Triaged 7 issues and labeled them.')).toBeTruthy()
   })

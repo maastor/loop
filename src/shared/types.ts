@@ -1,6 +1,3 @@
-// shared/types.ts — core data model for loop, shared across main, daemon, preload, renderer.
-// Pure types only — no node/electron imports.
-
 export type AgentId = 'claude' | 'codex'
 export type ModelId = 'sonnet' | 'opus' | 'haiku'
 
@@ -14,32 +11,21 @@ export type AgentModelCatalog = {
   models: AgentModel[]
   defaultModelId: string
   source: 'agent' | 'bundled'
-  /** Present when live discovery failed and the bundled list is being used. */
   error?: string
 }
 
-/**
- * How the headless `claude` run treats tool-permission prompts. Routines are
- * unattended, so there is no one to answer a prompt — the mode is fixed at launch.
- *  - 'bypass'      → --dangerously-skip-permissions (full auto; the default)
- *  - 'acceptEdits' → --permission-mode acceptEdits (auto-accept file edits only)
- *  - 'default'     → --permission-mode default (anything needing approval is denied;
- *                    safest, but a routine that edits/commits may do nothing)
- */
+/** Unattended permission policy; scheduled agents have no TTY for interactive approval. */
 export type PermissionMode = 'bypass' | 'acceptEdits' | 'default'
 
 export type ScheduleFreq = 'daily' | 'weekdays' | 'weekly' | 'hourly'
 
-/** Day-of-week index, 0 = Sunday … 6 = Saturday (matches Date.getDay()). */
 export type DayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 export type Schedule = {
   freq: ScheduleFreq
   /** "HH:MM" 24h. Ignored for hourly. */
   time: string
-  /** Days of week for weekly freq. */
   days: number[]
-  /** Interval in hours for hourly freq. */
   everyHours: number
 }
 
@@ -50,7 +36,6 @@ export type Routine = {
   /** Working directory; may contain a leading ~. */
   dir: string
   agent: AgentId
-  /** Claude model alias or Codex model id. */
   model: string
   enabled: boolean
   schedule: Schedule
@@ -77,20 +62,15 @@ export type TranscriptRole = 'user' | 'assistant' | 'tool' | 'result'
 export type TranscriptEntry = {
   role: TranscriptRole
   text?: string
-  /** For tool entries: the tool name (e.g. "Bash"). */
   name?: string
-  /** For tool entries: the tool argument summary. */
   arg?: string
-  /** For result entries: marks an error result. */
   err?: boolean
 }
 
 export type Run = {
   id: string
   routineId: string
-  /** ISO timestamp. */
   start: string
-  /** null while running. */
   durationSec: number | null
   status: RunStatus
   costUsd: number | null
@@ -118,11 +98,8 @@ export type Tweaks = {
 }
 
 export type Settings = {
-  /** Agent preselected when creating a routine. */
   defaultAgent: AgentId
-  /** Whether routines should run in the background via the launchd daemon. */
   daemonEnabled: boolean
-  /** Global pause — disables all scheduling without touching per-routine enabled flags. */
   pausedAll: boolean
   /** Default permission mode for routines that don't override it. */
   defaultPermissionMode: PermissionMode
@@ -136,35 +113,26 @@ export type Settings = {
   runTimeoutMinutes: number
 }
 
-/** Lifecycle of the in-app (assisted) updater, tracked at runtime — not persisted. */
 export type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'
 
-/** Result of a check against the GitHub Releases feed. */
 export type UpdateInfo = {
   currentVersion: string
   latestVersion: string | null
   available: boolean
-  /** Release page — used for the "view release notes" fallback. */
   releaseUrl: string | null
-  /** Arch-matched .dmg download URL. */
   assetUrl: string | null
   assetName: string | null
-  /** Release body / notes (optional, shown in Settings). */
   notes: string | null
-  /** ISO timestamp of the check. */
   checkedAt: string
 }
 
-/** Current updater state pushed to the renderer over IPC. */
 export type UpdateStatus = {
   phase: UpdatePhase
   info: UpdateInfo | null
-  /** Download progress 0–100 while phase is 'downloading'. */
   percent?: number
   error?: string
 }
 
-/** The full persisted application state (one JSON file). */
 export type AppData = {
   version: number
   routines: Routine[]
