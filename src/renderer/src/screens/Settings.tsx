@@ -119,11 +119,11 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
               skipped. Routines can override this.
             </div>
           </div>
-          <label className="inline-field">
+          <label className="numeric-field">
             <input
               type="number"
               min={0}
-              className="input time-input mono"
+              className="numeric-input mono"
               value={settings.defaultMissedRunGraceMinutes}
               onChange={(e) =>
                 void setSetting('defaultMissedRunGraceMinutes', Math.max(0, +e.target.value || 0))
@@ -141,11 +141,11 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
               routine indefinitely. Set to 0 to disable.
             </div>
           </div>
-          <label className="inline-field">
+          <label className="numeric-field">
             <input
               type="number"
               min={0}
-              className="input time-input mono"
+              className="numeric-input mono"
               value={settings.runTimeoutMinutes}
               onChange={(e) =>
                 void setSetting('runTimeoutMinutes', Math.max(0, +e.target.value || 0))

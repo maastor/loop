@@ -3,11 +3,12 @@ import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { homedir } from 'os'
 import { IPC } from '@shared/ipc'
 import type { RoutineCreateInput } from '@shared/ipc'
-import type { Routine, Tweaks, Settings } from '@shared/types'
+import type { AgentId, Routine, Tweaks, Settings } from '@shared/types'
 import { uid } from '@shared/schedule'
 import type { Store } from '@core/persistence'
 import { executeRoutine } from '@core/scheduler'
 import { createRunningRun } from '@core/agent-runner'
+import { discoverAgentModels } from '@core/agent-models'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
@@ -43,6 +44,7 @@ async function runRoutineNow(store: Store, id: string, broadcast: () => void): P
 }
 
 export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: IpcDeps): void {
+  ipcMain.handle(IPC.agentModels, (_e, agent: AgentId) => discoverAgentModels(agent))
   ipcMain.handle(IPC.routinesList, () => store.listRoutines())
   ipcMain.handle(IPC.routinesGet, (_e, id: string) => store.getRoutine(id))
 

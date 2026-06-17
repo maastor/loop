@@ -7,7 +7,7 @@ import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
-import type { ModelId, PermissionMode } from '@shared/types'
+import type { PermissionMode } from '@shared/types'
 import { expandHome } from './paths'
 import { type StreamEvent } from './claude-stream'
 import { createTranscriptCollector } from './claude-run-transcript'
@@ -45,12 +45,6 @@ function buildEnv(): NodeJS.ProcessEnv {
   const current = process.env.PATH ? process.env.PATH.split(':') : []
   const merged = Array.from(new Set([...current, ...extra])).join(':')
   return { ...process.env, PATH: merged }
-}
-
-const MODEL_FLAG: Record<ModelId, string> = {
-  sonnet: 'sonnet',
-  opus: 'opus',
-  haiku: 'haiku'
 }
 
 /**
@@ -104,7 +98,7 @@ export function runClaude(opts: AgentRunOptions, cb: RunCallbacks = {}): Promise
       'stream-json',
       '--verbose',
       '--model',
-      MODEL_FLAG[opts.model as ModelId] || 'sonnet',
+      opts.model || 'sonnet',
       ...permissionArgs(opts.permissionMode ?? 'bypass')
     ]
 

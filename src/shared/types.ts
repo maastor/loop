@@ -4,6 +4,20 @@
 export type AgentId = 'claude' | 'codex'
 export type ModelId = 'sonnet' | 'opus' | 'haiku'
 
+export type AgentModel = {
+  id: string
+  label: string
+  description?: string
+}
+
+export type AgentModelCatalog = {
+  models: AgentModel[]
+  defaultModelId: string
+  source: 'agent' | 'bundled'
+  /** Present when live discovery failed and the bundled list is being used. */
+  error?: string
+}
+
 /**
  * How the headless `claude` run treats tool-permission prompts. Routines are
  * unattended, so there is no one to answer a prompt — the mode is fixed at launch.

@@ -5,6 +5,9 @@ import type { AppData, UpdateStatus } from '@shared/types'
 import type { LoopApi } from './api-types'
 
 const api: LoopApi = {
+  agents: {
+    models: (agent) => ipcRenderer.invoke(IPC.agentModels, agent)
+  },
   routines: {
     list: () => ipcRenderer.invoke(IPC.routinesList),
     get: (id) => ipcRenderer.invoke(IPC.routinesGet, id),

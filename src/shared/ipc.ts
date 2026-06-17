@@ -9,6 +9,7 @@ export const IPC = {
   routineDelete: 'routines:delete',
   routineToggle: 'routines:toggle',
   routineRunNow: 'routines:runNow',
+  agentModels: 'agents:models',
   runsList: 'runs:list',
   runGet: 'runs:get',
   tweaksGet: 'tweaks:get',
