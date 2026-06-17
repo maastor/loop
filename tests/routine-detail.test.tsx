@@ -1,4 +1,3 @@
-// tests/routine-detail.test.tsx — RoutineDetail screen render + delete-confirm flow.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { useStore } from '../src/renderer/src/store'

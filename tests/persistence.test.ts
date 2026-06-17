@@ -6,7 +6,6 @@ import { defaultAppData } from '@shared/seed'
 import type { AppData } from '@shared/types'
 import type { AppDataPersistence } from '@core/app-data-file'
 
-// Redirect Store storage to a temp dir BEFORE importing the module that reads paths.
 let dir: string
 
 async function freshStore() {
@@ -100,7 +99,7 @@ describe('Store', () => {
     expect(calls).toBe(3)
     unsub()
     store.setTweaks({ accent: '#000' })
-    expect(calls).toBe(3) // no longer notified after unsubscribe
+    expect(calls).toBe(3)
   })
 
   it('reloads data written by another process before reads', async () => {
@@ -129,7 +128,7 @@ describe('Store', () => {
   it('recovers from a corrupt data file via backup', async () => {
     const store = await freshStore()
     store.setTweaks({ accent: '#abcabc' })
-    store.setTweaks({ density: 'compact' }) // backs up the state containing the accent
+    store.setTweaks({ density: 'compact' })
     writeFileSync(join(dir, 'loop-data.json'), '{ not json', 'utf-8')
     const store2 = await freshStore()
     expect(store2.getTweaks().accent).toBe('#abcabc')

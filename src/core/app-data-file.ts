@@ -1,4 +1,3 @@
-// Atomic JSON file adapter for Loop application data.
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'fs'
 import type { AppData } from '@shared/types'
 import { APP_DATA_VERSION, defaultAppData } from '@shared/seed'
@@ -51,7 +50,6 @@ export class AppDataFile implements AppDataPersistence {
     }
   }
 
-  /** Return fresh disk state only when another process has written since our last access. */
   reloadIfChanged(current: AppData): AppData {
     const file = dataFile()
     try {

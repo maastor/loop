@@ -1,5 +1,3 @@
-// core/claude-stream.ts — pure helpers for parsing the `claude` NDJSON event stream.
-// Split out of claude-runner.ts to keep that file under the max-lines budget; no I/O here.
 import type { Change } from '@shared/types'
 
 export type StreamEvent = {
@@ -46,7 +44,6 @@ export function summarizeToolArg(name: string, input: unknown): string {
   }
 }
 
-/** Heuristically derive "changes" (files edited, commits, PRs) from tool usage. */
 export function deriveChange(name: string, arg: string): Change | null {
   const lower = name.toLowerCase()
   if (lower === 'edit' || lower === 'write' || lower === 'multiedit' || lower === 'notebookedit') {

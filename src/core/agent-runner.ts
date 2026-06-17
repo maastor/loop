@@ -3,7 +3,6 @@ import { runClaude } from './claude-runner'
 import { runCodex } from './codex-runner'
 
 export type RunCallbacks = {
-  /** Called whenever a new transcript entry is produced. */
   onTranscript?: (entry: TranscriptEntry, all: TranscriptEntry[]) => void
 }
 

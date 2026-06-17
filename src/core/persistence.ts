@@ -1,4 +1,3 @@
-// Domain-facing application store shared by Electron main and daemon.
 import type { AppData, Routine, Run, Tweaks, Settings } from '@shared/types'
 import { AppDataFile, type AppDataPersistence } from './app-data-file'
 
@@ -10,12 +9,7 @@ export class Store {
     this.state = this.persistence.load()
   }
 
-  /**
-   * Subscribe to local mutations (anything that goes through `mutate`). The main process
-   * uses this to broadcast to the renderer after every write — far more reliable than
-   * watching the data file, whose `fs.watch` goes deaf after the first atomic rename.
-   * Returns an unsubscribe function. Cross-process (daemon) writes are NOT seen here.
-   */
+  // Cross-process writes bypass this listener and arrive through the directory watcher.
   onChange(listener: () => void): () => void {
     this.changeListeners.add(listener)
     return () => this.changeListeners.delete(listener)
@@ -39,12 +33,10 @@ export class Store {
     return result
   }
 
-  /** Reload before every access so main and daemon observe each other's writes. */
   private reloadIfStale(): void {
     this.state = this.persistence.reloadIfChanged(this.state)
   }
 
-  // ── reads ──────────────────────────────────────────────────
   getAll(): AppData {
     this.reloadIfStale()
     return structuredClone(this.state)
@@ -85,7 +77,6 @@ export class Store {
     return structuredClone(this.state.settings)
   }
 
-  // ── routine mutations ──────────────────────────────────────
   upsertRoutine(routine: Routine): Routine {
     return this.mutate((s) => {
       const i = s.routines.findIndex((r) => r.id === routine.id)
@@ -114,7 +105,6 @@ export class Store {
     })
   }
 
-  // ── run mutations ──────────────────────────────────────────
   addRun(run: Run): Run {
     return this.mutate((s) => {
       s.runs = [run, ...s.runs]
@@ -133,11 +123,7 @@ export class Store {
     })
   }
 
-  /**
-   * Fail any run still marked "running" but older than maxAgeMs. Such runs belong to a
-   * process that exited without finishing; left as-is they wedge the scheduler (which
-   * won't fire a routine that appears to be mid-run). Returns the number cleaned up.
-   */
+  // Crashed owners leave running rows that would otherwise block future schedules.
   reconcileStaleRuns(maxAgeMs: number): number {
     return this.mutate((s) => {
       const now = Date.now()
@@ -154,7 +140,6 @@ export class Store {
     })
   }
 
-  // ── settings / tweaks ──────────────────────────────────────
   setTweaks(patch: Partial<Tweaks>): Tweaks {
     return this.mutate((s) => {
       s.tweaks = { ...s.tweaks, ...patch }

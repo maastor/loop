@@ -42,7 +42,6 @@ describe('CalendarScreen', () => {
   it('renders the month title and a run dot for today', () => {
     render(<CalendarScreen nav={() => {}} now={now} openEditor={() => {}} />)
     expect(screen.getByText(`${MONTHS[now.getMonth()]} ${now.getFullYear()}`)).toBeTruthy()
-    // selected day defaults to today, side panel lists the run
     expect(screen.getByText('Nightly audit')).toBeTruthy()
   })
 

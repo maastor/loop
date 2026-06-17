@@ -75,7 +75,7 @@ describe('describeSchedule', () => {
 
 describe('computeNextRun', () => {
   it('finds the next daily occurrence after now', () => {
-    const now = new Date(2026, 0, 1, 8, 0, 0) // Jan 1 2026, 08:00
+    const now = new Date(2026, 0, 1, 8, 0, 0)
     const next = computeNextRun({ freq: 'daily', time: '09:00', days: [], everyHours: 0 }, now)
     expect(next).not.toBeNull()
     expect(next!.getHours()).toBe(9)
@@ -92,8 +92,8 @@ describe('computeNextRun', () => {
 describe('scheduleTimesForDay', () => {
   it('returns weekday times only Mon-Fri', () => {
     const sched: Schedule = { freq: 'weekdays', time: '09:00', days: [], everyHours: 0 }
-    const sat = new Date(2026, 0, 3) // Saturday
-    const mon = new Date(2026, 0, 5) // Monday
+    const sat = new Date(2026, 0, 3)
+    const mon = new Date(2026, 0, 5)
     expect(scheduleTimesForDay(sched, sat)).toEqual([])
     expect(scheduleTimesForDay(sched, mon)).toEqual(['09:00'])
   })

@@ -1,5 +1,3 @@
-// shared/schedule.ts — schedule engine + natural-language parsing.
-// Ported faithfully from project/app/data.js (the design prototype).
 import type { Schedule, ModelMeta, PermissionMode } from './types'
 
 export const MODELS: ModelMeta[] = [
@@ -109,7 +107,6 @@ export function computeNextRun(s: Schedule, from?: Date): Date | null {
   return null
 }
 
-// ── natural language parsing ───────────────────────────────
 const DAY_MAP: Record<string, number> = {
   sunday: 0,
   monday: 1,

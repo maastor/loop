@@ -9,7 +9,6 @@ import {
   type AtomRelease
 } from '@shared/release'
 
-// Trimmed, structurally-faithful sample of github.com/<owner>/<repo>/releases.atom.
 const ATOM = `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Release notes from loop</title>

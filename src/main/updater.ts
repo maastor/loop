@@ -1,7 +1,3 @@
-// main/updater.ts — assisted auto-update. Polls the GitHub Releases feed, and on
-// the user's request downloads the arch-matched .dmg and opens it (drag-to-
-// Applications). No electron-updater / Squirrel: Loop's DMGs are unsigned, so a
-// seamless in-place install isn't possible (see BUILD.md). Electron built-ins only.
 import { createWriteStream } from 'fs'
 import { join } from 'path'
 import { app, net, shell, BrowserWindow } from 'electron'
@@ -16,17 +12,14 @@ import {
 
 const OWNER = 'maxi-scala'
 const REPO = 'loop'
-// The public atom feed (github.com), NOT the REST API (api.github.com): the
-// unauthenticated REST API is rate-limited to 60 req/hr per IP and returns 403
-// once exhausted (common behind a shared/corporate NAT). The atom feed isn't.
+// The REST API's shared-IP rate limit makes the public Atom feed more reliable.
 const FEED_URL = `https://github.com/${OWNER}/${REPO}/releases.atom`
-const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000 // 6h
-const FIRST_CHECK_DELAY_MS = 8 * 1000 // let the window settle before the first check
+const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000
+const FIRST_CHECK_DELAY_MS = 8 * 1000
 
 let current: UpdateStatus = { phase: 'idle', info: null }
 let timer: NodeJS.Timeout | null = null
 
-/** Push the current status to every live renderer (mirrors broadcastData in ipc.ts). */
 function broadcastStatus(): void {
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) {
@@ -48,7 +41,6 @@ function appArch(): AppArch {
   return process.arch === 'arm64' ? 'arm64' : 'x64'
 }
 
-/** GET a URL via Electron's net stack, resolving the full response body as a string. */
 function fetchText(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const request = net.request(url)
@@ -70,10 +62,7 @@ function fetchText(url: string): Promise<string> {
   })
 }
 
-/**
- * Check the GitHub releases.atom feed. Never throws — failures land in phase
- * 'error' so a background check stays silent and the UI can show a message on demand.
- */
+// Background checks report failure through state instead of rejecting into the main process.
 export async function checkForUpdate(): Promise<UpdateStatus> {
   setStatus({ phase: 'checking', info: current.info })
   try {
@@ -87,7 +76,6 @@ export async function checkForUpdate(): Promise<UpdateStatus> {
   return current
 }
 
-/** Download the arch-matched .dmg with progress, then open it (mounts the DMG). */
 export async function downloadAndOpen(): Promise<void> {
   const info = current.info
   if (!info?.assetUrl || !info.assetName) {
@@ -128,21 +116,18 @@ export async function downloadAndOpen(): Promise<void> {
       request.end()
     })
     setStatus({ phase: 'ready', info, percent: 100 })
-    // Open the .dmg so Finder mounts it; the user drags Loop to Applications.
     await shell.openPath(dest)
   } catch (e) {
     setStatus({ phase: 'error', info, error: String(e) })
   }
 }
 
-/** Open the GitHub release page in the default browser. */
 export async function openReleasePage(): Promise<void> {
   if (current.info?.releaseUrl) {
     await shell.openExternal(current.info.releaseUrl)
   }
 }
 
-/** Run one check shortly after launch, then poll every 6h. Safe to call once. */
 export function startAutoChecks(): void {
   if (timer) {
     return

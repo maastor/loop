@@ -1,4 +1,3 @@
-// preload/api-types.ts — the typed `window.api` surface exposed by the preload bridge.
 import type {
   AgentId,
   AgentModelCatalog,
@@ -13,9 +12,7 @@ import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
 
 export type LoopApi = {
   data: {
-    /** Read one internally consistent persisted-state snapshot. */
     get: () => Promise<AppData>
-    /** Subscribe to persisted-state changes. Returns an unsubscribe fn. */
     onChanged: (cb: (data: AppData) => void) => () => void
   }
   agents: {
@@ -40,21 +37,15 @@ export type LoopApi = {
     uninstall: () => Promise<DaemonStatus>
   }
   app: {
-    /** Bring the main window to the front (used by the tray). */
     openWindow: () => Promise<void>
   }
   update: {
-    /** Force a check against the GitHub Releases feed; resolves to the new status. */
     check: () => Promise<UpdateStatus>
-    /** Download the arch-matched .dmg and open it (mounts the disk image). */
     start: () => Promise<void>
-    /** Open the release page in the default browser. */
     openRelease: () => Promise<void>
-    /** Subscribe to updater status pushes. Returns an unsubscribe fn. */
     onStatus: (cb: (status: UpdateStatus) => void) => () => void
   }
   dialog: {
-    /** Open a native folder picker; resolves to the chosen absolute path, or null if cancelled. */
     selectDirectory: () => Promise<string | null>
   }
 }

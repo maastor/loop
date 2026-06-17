@@ -1,4 +1,3 @@
-// renderer/src/components.tsx — shared UI primitives, ported from project/app/components.jsx.
 import React from 'react'
 import type { AgentId, RunStatus, Change, TranscriptEntry, Run } from '@shared/types'
 import { MODELS } from '@shared/schedule'
@@ -9,7 +8,6 @@ import { Markdown } from './Markdown'
 export { Icon }
 export type { IconName }
 
-// ── status ───────────────────────────────────────────────────
 export const STATUS_META: Record<string, { color: string; label: string }> = {
   success: { color: 'var(--green)', label: 'success' },
   failed: { color: 'var(--red)', label: 'failed' },
@@ -45,7 +43,6 @@ export function StatusBadge({ status }: { status: RunStatus }): React.JSX.Elemen
   )
 }
 
-// ── controls ─────────────────────────────────────────────────
 export function Toggle({
   value,
   onChange,
@@ -197,7 +194,6 @@ export function EmptyState({
   )
 }
 
-// ── change list (files / commits / PRs) ──────────────────────
 export function ChangeItem({ change }: { change: Change }): React.JSX.Element {
   const icons: Record<string, IconName> = {
     edit: 'file',
@@ -213,7 +209,6 @@ export function ChangeItem({ change }: { change: Change }): React.JSX.Element {
   )
 }
 
-// ── transcript ───────────────────────────────────────────────
 export function Transcript({ entries }: { entries: TranscriptEntry[] }): React.JSX.Element {
   return (
     <div className="transcript">
@@ -261,7 +256,6 @@ export function Transcript({ entries }: { entries: TranscriptEntry[] }): React.J
   )
 }
 
-// ── run stats strip ──────────────────────────────────────────
 export function RunStats({ run }: { run: Run }): React.JSX.Element {
   return (
     <div className="run-stats mono">

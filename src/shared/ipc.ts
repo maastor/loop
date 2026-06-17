@@ -1,4 +1,3 @@
-// shared/ipc.ts — IPC channel name constants, shared by main and preload.
 import type { AgentId, PermissionMode, Schedule } from './types'
 
 export const IPC = {
@@ -19,14 +18,12 @@ export const IPC = {
   updateCheck: 'update:check',
   updateStart: 'update:start',
   updateOpenRelease: 'update:openRelease',
-  // main → renderer push
   dataChanged: 'data:changed',
   updateStatus: 'update:status'
 } as const
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC]
 
-/** Input to create a routine (id/enabled assigned/defaulted by main). */
 export type RoutineCreateInput = {
   name: string
   prompt: string

@@ -1,8 +1,3 @@
-// core/claude-runner.ts — execute a routine by spawning the real `claude` CLI headless.
-//
-// Mirrors orca's approach of driving the Claude CLI as a child process, but uses the
-// non-interactive `--print --output-format stream-json` mode so we can parse a clean
-// NDJSON event stream into a transcript plus usage (cost / tokens / duration).
 import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
@@ -13,7 +8,7 @@ import { type StreamEvent } from './claude-stream'
 import { createTranscriptCollector } from './claude-run-transcript'
 import type { AgentRunOptions, RunCallbacks, RunResult } from './agent-runner'
 
-/** Resolve the `claude` executable, since GUI/daemon processes have a sparse PATH. */
+// GUI and launchd processes do not inherit the user's shell PATH.
 export function resolveClaudeCommand(): string {
   if (process.env.LOOP_CLAUDE_BIN && existsSync(process.env.LOOP_CLAUDE_BIN)) {
     return process.env.LOOP_CLAUDE_BIN
@@ -29,11 +24,9 @@ export function resolveClaudeCommand(): string {
       return c
     }
   }
-  // Fall back to bare name and let PATH resolution try.
   return 'claude'
 }
 
-/** Build an augmented PATH so spawned `claude` can find node, git, gh, etc. */
 function buildEnv(): NodeJS.ProcessEnv {
   const extra = [
     join(homedir(), '.local', 'bin'),
@@ -47,11 +40,7 @@ function buildEnv(): NodeJS.ProcessEnv {
   return { ...process.env, PATH: merged }
 }
 
-/**
- * CLI flags for a permission mode. Routines run unattended, so the default 'bypass'
- * skips prompts entirely; otherwise a tool needing approval would be denied (or stall)
- * because there is no TTY to answer on.
- */
+// Headless runs have no TTY to answer permission prompts.
 export function permissionArgs(mode: PermissionMode): string[] {
   switch (mode) {
     case 'bypass':
@@ -63,10 +52,6 @@ export function permissionArgs(mode: PermissionMode): string[] {
   }
 }
 
-/**
- * Run a routine's prompt through the Claude CLI. Resolves when the process exits.
- * Streams transcript entries via callbacks as they arrive.
- */
 export function runClaude(opts: AgentRunOptions, cb: RunCallbacks = {}): Promise<RunResult> {
   return new Promise<RunResult>((resolve) => {
     const cmd = resolveClaudeCommand()
@@ -123,13 +108,10 @@ export function runClaude(opts: AgentRunOptions, cb: RunCallbacks = {}): Promise
     let stderr = ''
     let timedOut = false
 
-    // Nothing ever writes to the child's stdin; close it so a CLI that tries to read
-    // a prompt answer gets EOF immediately instead of blocking forever.
+    // Send EOF so an unexpected prompt cannot block forever.
     child.stdin?.end()
 
-    // Hard ceiling on a single run. Without this a hung CLI (e.g. one that stalls on a
-    // permission prompt in a non-bypass mode) would only be cleaned up by the 2h stale
-    // sweep. SIGTERM first, then SIGKILL if it ignores us.
+    // A stale-row sweep cannot terminate a live hung process; enforce the timeout here.
     let timer: NodeJS.Timeout | null = null
     if (opts.timeoutMs && opts.timeoutMs > 0) {
       timer = setTimeout(() => {
@@ -190,9 +172,7 @@ export function runClaude(opts: AgentRunOptions, cb: RunCallbacks = {}): Promise
       }
       const durationSec = Math.round((Date.now() - startedAt) / 1000)
       const failed = timedOut || collector.isError || (code !== 0 && code !== null)
-      // Preserve the result's Markdown structure (newlines, lists) for the run-detail
-      // view, which renders it as Markdown; only cap runs of blank lines. List previews
-      // collapse it to one line via CSS (white-space: nowrap).
+      // Run detail renders Markdown, so retain line structure while capping blank runs.
       let summary = collector.finalSummary.replace(/\n{3,}/g, '\n\n').trim()
       if (timedOut && !summary) {
         summary = `Timed out after ${Math.round((opts.timeoutMs ?? 0) / 60000)} minutes.`

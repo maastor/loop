@@ -1,4 +1,3 @@
-// tests/routines.test.tsx — RoutinesScreen renders and toggle/run-now fire without throwing.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react'
 import { RoutinesScreen } from '@renderer/screens/Routines'
@@ -23,7 +22,6 @@ const routine: Routine = {
 
 beforeEach(() => {
   cleanup()
-  // Stub the IPC surface the store touches (toggle/runNow + the load() refresh).
   ;(globalThis as unknown as { window: { api: unknown } }).window.api = {
     routines: {
       list: async () => [routine],

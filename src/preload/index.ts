@@ -1,4 +1,3 @@
-// preload/index.ts — context bridge: the audited contract between renderer and main.
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '@shared/ipc'
 import type { AppData, UpdateStatus } from '@shared/types'

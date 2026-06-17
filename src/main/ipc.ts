@@ -1,4 +1,3 @@
-// main/ipc.ts — registers all ipcMain handlers and wires data-change broadcasts.
 import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { homedir } from 'os'
 import { IPC } from '@shared/ipc'
@@ -15,9 +14,7 @@ import { checkForUpdate, downloadAndOpen, openReleasePage, getStatus } from './u
 
 export type IpcDeps = {
   store: Store
-  /** Called whenever state mutates so the renderer + tray refresh. */
   broadcast: () => void
-  /** Re-sync the in-app scheduler with the daemon state after a daemon toggle. */
   reconcileScheduler: () => void
 }
 
@@ -61,7 +58,6 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
   })
 
   ipcMain.handle(IPC.routineRunNow, async (_e, id: string) => {
-    // Kick off asynchronously; return the running run record immediately.
     const routine = store.getRoutine(id)
     if (!routine) {
       return undefined
@@ -119,7 +115,6 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
   })
 }
 
-/** Push fresh AppData to every renderer window and refresh the tray. */
 export function broadcastData(store: Store): void {
   const data = store.getAll()
   for (const win of BrowserWindow.getAllWindows()) {

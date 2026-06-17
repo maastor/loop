@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { useStore, subscribeToDataChanges, subscribeToUpdateStatus } from './store'
 
-// Last-resort visibility for otherwise-silent failures in the renderer.
 window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled promise rejection:', e.reason)
 })

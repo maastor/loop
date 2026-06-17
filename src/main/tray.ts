@@ -1,9 +1,3 @@
-// main/tray.ts — macOS menu-bar status item with a quick-status dropdown.
-//
-// Mirrors the design's menu-bar quick-status panel (project/app/screens-menubar.jsx):
-// a ✱ status item whose native dropdown shows running/next-up/recent runs, a
-// "Pause all" toggle, "Open Loop…", and "Quit Loop". refreshTray() rebuilds the
-// menu from the Store and is called by main/ipc.ts after every data change.
 import { Tray, Menu, nativeImage } from 'electron'
 import type { MenuItemConstructorOptions, NativeImage } from 'electron'
 import type { Store } from '@core/persistence'
@@ -16,10 +10,6 @@ export type TrayDeps = {
   showWindow: () => void
 }
 
-// ── pure menu model (testable without electron) ──────────────────────────────
-// A serializable description of the menu, deliberately close to Electron's
-// MenuItemConstructorOptions so the wiring is a thin mapping. It carries no
-// functions/electron refs so it can be unit-tested with plain data.
 export type MenuModelItem =
   | { type: 'header'; label: string }
   | { type: 'label'; label: string }
@@ -28,10 +18,6 @@ export type MenuModelItem =
   | { type: 'action'; id: 'openLoop'; label: string }
   | { type: 'quit'; label: string }
 
-/**
- * Build the serializable menu model from plain data. Pure: no electron, no I/O.
- * `now` is injected so tests are deterministic.
- */
 export function buildMenuModel(
   routines: Routine[],
   runs: Run[],
@@ -44,7 +30,6 @@ export function buildMenuModel(
 
   items.push({ type: 'header', label: 'Loop' })
 
-  // Running now
   const running = runs.filter((r) => r.status === 'running')
   if (running.length > 0) {
     items.push({ type: 'separator' })
@@ -57,7 +42,6 @@ export function buildMenuModel(
     }
   }
 
-  // Next up — next 2 enabled routines, unless globally paused.
   items.push({ type: 'separator' })
   items.push({ type: 'label', label: 'Next up' })
   if (settings.pausedAll) {
@@ -81,7 +65,6 @@ export function buildMenuModel(
     }
   }
 
-  // Recent — last 3 non-running runs (runs arrive newest-first from the store).
   const recent = runs.filter((r) => r.status !== 'running').slice(0, 3)
   if (recent.length > 0) {
     items.push({ type: 'separator' })
@@ -94,7 +77,6 @@ export function buildMenuModel(
     }
   }
 
-  // Controls
   items.push({ type: 'separator' })
   items.push({ type: 'checkbox', id: 'pauseAll', label: 'Pause all', checked: settings.pausedAll })
   items.push({ type: 'action', id: 'openLoop', label: 'Open Loop…' })
@@ -104,17 +86,14 @@ export function buildMenuModel(
   return items
 }
 
-// ── electron wiring ───────────────────────────────────────────────────────────
 let tray: Tray | null = null
 let deps: TrayDeps | null = null
 
-/** Map the pure model into Electron's menu template, attaching click handlers. */
 function toTemplate(model: MenuModelItem[]): MenuItemConstructorOptions[] {
   return model.map((item): MenuItemConstructorOptions => {
     switch (item.type) {
       case 'header':
       case 'label':
-        // Disabled informational rows.
         return { label: item.label, enabled: false }
       case 'separator':
         return { type: 'separator' }
@@ -138,8 +117,7 @@ function toTemplate(model: MenuModelItem[]): MenuItemConstructorOptions[] {
 }
 
 function trayImage(): NativeImage {
-  // A template image adapts to light/dark menu bars. We start empty and rely on
-  // setTitle('✱'); an empty template image avoids a broken-image placeholder.
+  // Empty template image avoids a broken icon while `setTitle` supplies the menu-bar mark.
   const img = nativeImage.createEmpty()
   img.setTemplateImage(true)
   return img
@@ -153,7 +131,6 @@ export function createTray(d: TrayDeps): void {
     tray.setToolTip('Loop — coding agent routines')
     refreshTray()
   } catch {
-    // Some headless/non-darwin environments can't create a Tray; degrade gracefully.
     tray = null
   }
 }
@@ -180,7 +157,7 @@ export function destroyTray(): void {
   try {
     tray?.destroy()
   } catch {
-    /* ignore */
+    /* tray may already be destroyed by Electron shutdown */
   }
   tray = null
   deps = null

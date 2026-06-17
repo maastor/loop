@@ -1,5 +1,3 @@
-// shared/seed.ts — first-run seed data. Routines ported from project/app/data.js.
-// Runs are intentionally empty: real runs are produced by executing coding agents.
 import type { AppData, Routine, Tweaks, Settings } from './types'
 
 export const seedRoutines: Routine[] = [

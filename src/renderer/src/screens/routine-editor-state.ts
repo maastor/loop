@@ -146,7 +146,7 @@ export function useRoutineEditorState({
         }
       })
       .catch(() => {
-        // The bundled catalogs are already visible; keep the editor usable if IPC fails.
+        // Bundled models remain usable when discovery fails.
       })
       .finally(() => {
         if (!cancelled) {

@@ -1,8 +1,7 @@
 import type { AgentId, AgentModel, AgentModelCatalog } from './types'
 
 export const BUNDLED_AGENT_MODELS: Record<AgentId, AgentModel[]> = {
-  // Claude Code does not expose a non-interactive model-catalog command. Its stable
-  // aliases follow the active account/provider and are the same approach Orca uses.
+  // Claude Code has no non-interactive catalog; stable aliases follow the active provider.
   claude: [
     { id: 'sonnet', label: 'Sonnet', description: 'Fast, balanced — good default' },
     { id: 'opus', label: 'Opus', description: 'Most capable, slower' },
