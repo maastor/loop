@@ -13,6 +13,9 @@ const api: LoopApi = {
       return () => ipcRenderer.removeListener(IPC.dataChanged, listener)
     }
   },
+  agents: {
+    models: (agent) => ipcRenderer.invoke(IPC.agentModels, agent)
+  },
   routines: {
     create: (input) => ipcRenderer.invoke(IPC.routineCreate, input),
     update: (routine) => ipcRenderer.invoke(IPC.routineUpdate, routine),

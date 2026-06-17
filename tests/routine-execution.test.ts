@@ -8,6 +8,7 @@ const routine: Routine = {
   name: 'Test',
   prompt: 'Do work',
   dir: '~/work',
+  agent: 'claude',
   model: 'sonnet',
   enabled: true,
   schedule: { freq: 'daily', time: '09:00', days: [], everyHours: 0 }

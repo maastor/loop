@@ -8,6 +8,7 @@ function routine(patch: Partial<Routine> & { id: string; name: string }): Routin
   return {
     prompt: 'prompt',
     dir: '~/loop',
+    agent: 'claude',
     model: 'sonnet',
     enabled: true,
     schedule: { freq: 'daily', time: '09:00', days: [], everyHours: 0 },

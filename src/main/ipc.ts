@@ -3,10 +3,11 @@ import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { homedir } from 'os'
 import { IPC } from '@shared/ipc'
 import type { RoutineCreateInput } from '@shared/ipc'
-import type { Routine, Tweaks, Settings } from '@shared/types'
+import type { AgentId, Routine, Tweaks, Settings } from '@shared/types'
 import { uid } from '@shared/schedule'
 import type { Store } from '@core/persistence'
 import { startRoutineExecution } from '@core/routine-execution'
+import { discoverAgentModels } from '@core/agent-models'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
@@ -22,6 +23,7 @@ export type IpcDeps = {
 
 export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: IpcDeps): void {
   ipcMain.handle(IPC.dataGet, () => store.getAll())
+  ipcMain.handle(IPC.agentModels, (_e, agent: AgentId) => discoverAgentModels(agent))
 
   ipcMain.handle(IPC.routineCreate, (_e, input: RoutineCreateInput) => {
     const routine: Routine = {
@@ -29,6 +31,7 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
       name: input.name,
       prompt: input.prompt,
       dir: input.dir,
+      agent: input.agent,
       model: input.model,
       schedule: input.schedule,
       enabled: input.enabled ?? true,

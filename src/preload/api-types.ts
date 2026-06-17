@@ -1,5 +1,14 @@
 // preload/api-types.ts — the typed `window.api` surface exposed by the preload bridge.
-import type { Routine, Run, Tweaks, Settings, AppData, UpdateStatus } from '@shared/types'
+import type {
+  AgentId,
+  AgentModelCatalog,
+  Routine,
+  Run,
+  Tweaks,
+  Settings,
+  AppData,
+  UpdateStatus
+} from '@shared/types'
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
 
 export type LoopApi = {
@@ -8,6 +17,9 @@ export type LoopApi = {
     get: () => Promise<AppData>
     /** Subscribe to persisted-state changes. Returns an unsubscribe fn. */
     onChanged: (cb: (data: AppData) => void) => () => void
+  }
+  agents: {
+    models: (agent: AgentId) => Promise<AgentModelCatalog>
   }
   routines: {
     create: (input: RoutineCreateInput) => Promise<Routine>

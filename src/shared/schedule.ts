@@ -12,14 +12,18 @@ export const PERMISSION_MODES: { id: PermissionMode; label: string; desc: string
   {
     id: 'bypass',
     label: 'Auto',
-    desc: 'Skip all permission prompts (--dangerously-skip-permissions)'
+    desc: 'Skip permission prompts and agent sandboxing'
   },
   {
     id: 'acceptEdits',
     label: 'Auto-edit',
-    desc: 'Auto-accept file edits; prompt-gated tools are denied'
+    desc: 'Allow edits inside the working directory; deny broader access'
   },
-  { id: 'default', label: 'Ask', desc: 'Deny anything needing approval — safest, may do nothing' }
+  {
+    id: 'default',
+    label: 'Ask',
+    desc: 'Use the safest unattended mode; restricted actions are denied'
+  }
 ]
 
 export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

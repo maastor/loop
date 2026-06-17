@@ -1,7 +1,7 @@
 // Core routine execution lifecycle shared by manual and scheduled runs.
 import type { Routine, Run } from '@shared/types'
 import type { Store } from './persistence'
-import { runClaude } from './claude-runner'
+import { runAgent } from './agent-runner'
 
 export type RoutineExecution = (routine: Routine, run: Run, store: Store) => Promise<void>
 
@@ -37,13 +37,14 @@ export function createRunningRun(
   }
 }
 
-/** Execute a routine end-to-end and stream Claude output into its run record. */
+/** Execute a routine end-to-end and stream its selected agent into the run record. */
 export async function executeRoutine(routine: Routine, run: Run, store: Store): Promise<void> {
   const settings = store.getSettings()
   const permissionMode = routine.permissionMode ?? settings.defaultPermissionMode ?? 'bypass'
   const timeoutMs = (settings.runTimeoutMinutes ?? 0) * 60 * 1000
-  const result = await runClaude(
-    { prompt: routine.prompt, dir: routine.dir, model: routine.model, permissionMode, timeoutMs },
+  const result = await runAgent(
+    routine,
+    { permissionMode, timeoutMs },
     {
       onTranscript: (_entry, all) => {
         store.updateRun(run.id, { transcript: all })

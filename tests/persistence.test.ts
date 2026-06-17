@@ -57,6 +57,32 @@ describe('Store', () => {
     expect(data.tweaks.accent).toBe('#123456')
   })
 
+  it('migrates legacy routines and settings to Claude defaults', async () => {
+    writeFileSync(
+      join(dir, 'loop-data.json'),
+      JSON.stringify({
+        version: 1,
+        routines: [
+          {
+            id: 'legacy',
+            name: 'Legacy routine',
+            prompt: 'Do it',
+            dir: '~',
+            model: 'sonnet',
+            enabled: true,
+            schedule: { freq: 'daily', time: '09:00', days: [], everyHours: 0 }
+          }
+        ],
+        runs: [],
+        tweaks: {},
+        settings: { daemonEnabled: false }
+      })
+    )
+    const store = await freshStore()
+    expect(store.getRoutine('legacy')?.agent).toBe('claude')
+    expect(store.getSettings().defaultAgent).toBe('claude')
+  })
+
   it('writes valid JSON atomically and reloads it', async () => {
     const store = await freshStore()
     store.addRun(aRun('run-1', 'success', new Date().toISOString()))

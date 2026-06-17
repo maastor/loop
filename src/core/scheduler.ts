@@ -56,7 +56,7 @@ export function latestOccurrenceAtOrBefore(routine: Routine, now: Date): Date | 
 
 export type SchedulerOptions = {
   tickMs?: number
-  /** Override executor (used in tests). Defaults to runClaude-backed execution. */
+  /** Override executor (used in tests). Defaults to selected-agent execution. */
   execute?: RoutineExecution
   /** Called after each tick with the list of routine ids fired this tick. */
   onFire?: (routineIds: string[]) => void

@@ -10,6 +10,7 @@ const routine: Routine = {
   name: 'Nightly audit',
   prompt: 'audit deps',
   dir: '~/work/app',
+  agent: 'claude',
   model: 'sonnet',
   enabled: true,
   schedule: { freq: 'daily', time: '02:00', days: [], everyHours: 0 }

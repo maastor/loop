@@ -94,7 +94,7 @@ export default function App(): React.JSX.Element {
           </span>
           <div>
             <div className="sidebar-brand-name">Loop</div>
-            <div className="sidebar-brand-sub mono">for Claude Code</div>
+            <div className="sidebar-brand-sub mono">for coding agents</div>
           </div>
         </div>
         <nav className="sidebar-nav">

@@ -10,6 +10,7 @@ const routine: Routine = {
   name: 'Nightly dependency audit',
   prompt: 'Audit dependencies and open a PR for any safe upgrades.',
   dir: '~/code/app',
+  agent: 'claude',
   model: 'sonnet',
   enabled: true,
   schedule: { freq: 'daily', time: '21:00', days: [], everyHours: 0 }

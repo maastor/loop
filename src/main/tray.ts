@@ -150,7 +150,7 @@ export function createTray(d: TrayDeps): void {
   try {
     tray = new Tray(trayImage())
     tray.setTitle('✱')
-    tray.setToolTip('Loop — Claude Code routines')
+    tray.setToolTip('Loop — coding agent routines')
     refreshTray()
   } catch {
     // Some headless/non-darwin environments can't create a Tray; degrade gracefully.

@@ -2,7 +2,15 @@
 // summary + changes, transcript. Ported from project/app/screens-history.jsx (RunDetailScreen).
 import React from 'react'
 import { useStore } from '../store'
-import { ScreenHead, StatusBadge, Transcript, Icon, ModelChip, ChangeItem } from '../components'
+import {
+  ScreenHead,
+  StatusBadge,
+  Transcript,
+  Icon,
+  AgentChip,
+  ModelChip,
+  ChangeItem
+} from '../components'
 import { Markdown } from '../Markdown'
 import { fmtDateTime, fmtDur, fmtCost, fmtTokens } from '@shared/format'
 import type { ScreenProps, View } from '../views'
@@ -51,6 +59,10 @@ export function RunDetailScreen({
         <div className="run-meta">
           <span className="kv-k mono">tokens</span>
           <span className="mono">{fmtTokens(run.tokens)}</span>
+        </div>
+        <div className="run-meta">
+          <span className="kv-k mono">agent</span>
+          {routine ? <AgentChip agent={routine.agent} /> : <span className="mono">—</span>}
         </div>
         <div className="run-meta">
           <span className="kv-k mono">model</span>

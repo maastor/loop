@@ -8,6 +8,7 @@ function routine(schedule: Routine['schedule']): Routine {
     name: 'Test',
     prompt: 'do thing',
     dir: '~/',
+    agent: 'claude',
     model: 'sonnet',
     enabled: true,
     schedule

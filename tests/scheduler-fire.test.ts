@@ -37,6 +37,7 @@ function dailyRoutine(time: string, over: Partial<Routine> = {}): Routine {
     name: 'R',
     prompt: 'p',
     dir: '~',
+    agent: 'claude',
     model: 'sonnet',
     enabled: true,
     schedule: { freq: 'daily', time, days: [], everyHours: 0 },
