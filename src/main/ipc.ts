@@ -10,6 +10,7 @@ import { discoverAgentModels } from '@core/agent-models'
 import { getDaemonStatus, installDaemon, uninstallDaemon } from './launchd'
 import { showMainWindow } from './window'
 import { refreshTray } from './tray'
+import { notifyRunComplete } from './notifications'
 import { checkForUpdate, downloadAndOpen, openReleasePage, getStatus } from './updater'
 
 export type IpcDeps = {
@@ -64,7 +65,12 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
     }
     const started = startRoutineExecution(store, routine, { trigger: 'manual' })
     broadcast()
-    void started.completion.finally(broadcast)
+    void started.completion.finally(() => {
+      broadcast()
+      // Read the resolved row so the banner reflects final status, not the running row.
+      const run = store.getRun(started.run.id) ?? started.run
+      notifyRunComplete(routine, run, store.getSettings().notifyOnComplete)
+    })
     return started.run
   })
 

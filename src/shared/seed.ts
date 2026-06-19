@@ -72,7 +72,8 @@ export const defaultSettings: Settings = {
   pausedAll: false,
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
-  runTimeoutMinutes: 60
+  runTimeoutMinutes: 60,
+  notifyOnComplete: true
 }
 
 export const APP_DATA_VERSION = 1

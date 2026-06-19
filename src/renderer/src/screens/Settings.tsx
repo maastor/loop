@@ -90,6 +90,20 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
           </div>
           <Toggle value={settings.pausedAll} onChange={(v) => void setPausedAll(v)} />
         </div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Notify when a run finishes</div>
+            <div className="settings-desc">
+              Posts a macOS notification when a routine run completes or fails, whether it ran in
+              Loop or the background agent.
+            </div>
+          </div>
+          <Toggle
+            value={settings.notifyOnComplete}
+            onChange={(v) => void setSetting('notifyOnComplete', v)}
+          />
+        </div>
       </div>
 
       <div className="panel settings-section">

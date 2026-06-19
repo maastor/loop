@@ -111,6 +111,8 @@ export type Settings = {
   defaultMissedRunGraceMinutes: number
   /** Kill a single run after this many minutes (0 = no timeout). Guards against a hung CLI. */
   runTimeoutMinutes: number
+  /** Post a macOS notification when a routine run finishes (success or failure). */
+  notifyOnComplete: boolean
 }
 
 export type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'

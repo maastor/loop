@@ -1,4 +1,4 @@
-import type { Routine, Settings } from '@shared/types'
+import type { Routine, Run, Settings } from '@shared/types'
 import { scheduleTimesForDay } from '@shared/schedule'
 import type { Store } from './persistence'
 import {
@@ -40,6 +40,8 @@ export type SchedulerOptions = {
   tickMs?: number
   execute?: RoutineExecution
   onFire?: (routineIds: string[]) => void
+  /** Called once a dispatched run finishes (success/failed), with its final persisted row. */
+  onRunComplete?: (routine: Routine, run: Run) => void
   log?: (msg: string) => void
 }
 
@@ -48,6 +50,7 @@ export class Scheduler {
   private readonly tickMs: number
   private readonly execute: RoutineExecution
   private readonly onFire?: (routineIds: string[]) => void
+  private readonly onRunComplete?: (routine: Routine, run: Run) => void
   private readonly log: (msg: string) => void
   private inFlight = new Set<string>()
 
@@ -58,6 +61,7 @@ export class Scheduler {
     this.tickMs = opts.tickMs ?? DEFAULT_TICK_MS
     this.execute = opts.execute ?? executeRoutine
     this.onFire = opts.onFire
+    this.onRunComplete = opts.onRunComplete
     this.log = opts.log ?? (() => {})
   }
 
@@ -163,6 +167,8 @@ export class Scheduler {
     this.log(`dispatch ${routine.name} (${routine.id}) for ${run.scheduledFor}`)
     try {
       await completion
+      // Read the final persisted row so notifiers see the resolved status/summary.
+      this.onRunComplete?.(routine, this.store.getRun(run.id) ?? run)
     } finally {
       this.inFlight.delete(routine.id)
     }
