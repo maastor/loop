@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildPlistXml } from '../src/main/plist'
+import { buildPlistXml } from '../src/core/plist'
 
 describe('buildPlistXml', () => {
   const xml = buildPlistXml({

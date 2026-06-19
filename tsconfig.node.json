@@ -27,6 +27,7 @@
     "src/preload/**/*.ts",
     "src/core/**/*.ts",
     "src/daemon/**/*.ts",
+    "src/cli/**/*.ts",
     "src/shared/**/*.ts",
     "electron.vite.config.ts",
     "tests/**/*.ts"
