@@ -8,6 +8,7 @@ import { dataDir, dataFile } from '@core/paths'
 import { createMainWindow, showMainWindow } from './window'
 import { registerIpcHandlers, broadcastData } from './ipc'
 import { createTray } from './tray'
+import { notifyRunComplete } from './notifications'
 import { startAutoChecks } from './updater'
 
 let store: Store
@@ -66,6 +67,8 @@ function reconcileScheduler(): void {
   }
   scheduler = new Scheduler(store, {
     onFire: () => broadcast(),
+    onRunComplete: (routine, run) =>
+      notifyRunComplete(routine, run, store.getSettings().notifyOnComplete),
     log: (m) => console.log('[scheduler]', m)
   })
   scheduler.start()

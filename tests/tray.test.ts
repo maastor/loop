@@ -41,6 +41,7 @@ const settings = (over: Partial<Settings> = {}): Settings => ({
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
+  notifyOnComplete: true,
   ...over
 })
 

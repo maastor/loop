@@ -48,7 +48,8 @@ export const useStore = create<LoopState>((set, get) => ({
     pausedAll: false,
     defaultPermissionMode: 'bypass',
     defaultMissedRunGraceMinutes: 720,
-    runTimeoutMinutes: 60
+    runTimeoutMinutes: 60,
+    notifyOnComplete: true
   },
   daemon: { installed: false, loaded: false },
   update: { phase: 'idle', info: null },

@@ -2,6 +2,7 @@ import { appendFileSync } from 'fs'
 import { Store } from '@core/persistence'
 import { Scheduler, STALE_RUN_MS } from '@core/scheduler'
 import { logFile } from '@core/paths'
+import { notifyRunComplete } from './notify'
 
 function log(msg: string): void {
   const line = `[${new Date().toISOString()}] ${msg}\n`
@@ -20,7 +21,11 @@ function main(): void {
   if (cleaned) {
     log(`reconciled ${cleaned} stale running run(s)`)
   }
-  const scheduler = new Scheduler(store, { log })
+  const scheduler = new Scheduler(store, {
+    log,
+    onRunComplete: (routine, run) =>
+      notifyRunComplete(routine, run, store.getSettings().notifyOnComplete)
+  })
   scheduler.start()
 
   const shutdown = (signal: string): void => {
