@@ -4,12 +4,16 @@
   "description": "Coding Agent Routines Manager — schedule, run, and track headless agent sessions",
   "license": "MIT",
   "author": "loop",
+  "bin": {
+    "loop": "bin/loop.cjs"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "start": "electron-vite preview",
+    "cli": "node out/main/cli.js",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
