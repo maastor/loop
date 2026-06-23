@@ -1,5 +1,3 @@
-// renderer/src/screens/Calendar.tsx — month / week calendar of runs.
-// Ported from project/app/screens-calendar.jsx (CalendarScreen).
 import React from 'react'
 import { useStore } from '../store'
 import { ScreenHead, Seg, Btn, StatusDot, Icon } from '../components'

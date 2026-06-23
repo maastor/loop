@@ -1,5 +1,3 @@
-// renderer/src/screens/Routines.tsx — routines screen data wiring.
-// Ported from project/app/screens-routines.jsx.
 import React from 'react'
 import { useStore } from '../store'
 import type { RoutineGroupBy, RoutineSortBy, Run } from '@shared/types'

@@ -1,8 +1,3 @@
-// tests/electron-stub.ts — stand-in for the `electron` module under vitest.
-// Pure-logic tests (e.g. the tray menu model, plist builder) import modules that
-// statically `import ... from 'electron'`; in a non-Electron test runner that module
-// throws if the binary isn't installed. These no-op stubs let those imports resolve.
-// Tests must not exercise real Electron behaviour — only pure helpers.
 class Tray {}
 const Menu = { buildFromTemplate: () => ({}) }
 const nativeImage = { createEmpty: () => ({ setTemplateImage: () => {} }) }

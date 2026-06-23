@@ -1,4 +1,3 @@
-// renderer/src/lib/icons.tsx — 16px stroke icon set, ported from project/app/components.jsx.
 import React from 'react'
 
 export type IconName =

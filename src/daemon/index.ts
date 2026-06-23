@@ -1,12 +1,8 @@
-// daemon/index.ts — standalone background scheduler launched by launchd.
-//
-// Runs outside Electron (plain Node). It reuses the same core Store + Scheduler as the
-// app so scheduled routines fire even when the app is fully quit. Worker unit 8 owns the
-// launchd plist + install flow; this entry is the long-running process that plist invokes.
 import { appendFileSync } from 'fs'
 import { Store } from '@core/persistence'
 import { Scheduler, STALE_RUN_MS } from '@core/scheduler'
 import { logFile } from '@core/paths'
+import { notifyRunComplete } from './notify'
 
 function log(msg: string): void {
   const line = `[${new Date().toISOString()}] ${msg}\n`
@@ -15,7 +11,6 @@ function log(msg: string): void {
   } catch {
     /* ignore log failures */
   }
-  // Also stdout so launchd StandardOutPath captures it.
   process.stdout.write(line)
 }
 
@@ -26,7 +21,11 @@ function main(): void {
   if (cleaned) {
     log(`reconciled ${cleaned} stale running run(s)`)
   }
-  const scheduler = new Scheduler(store, { log })
+  const scheduler = new Scheduler(store, {
+    log,
+    onRunComplete: (routine, run) =>
+      notifyRunComplete(routine, run, store.getSettings().notifyOnComplete)
+  })
   scheduler.start()
 
   const shutdown = (signal: string): void => {
@@ -37,7 +36,6 @@ function main(): void {
   process.on('SIGTERM', () => shutdown('SIGTERM'))
   process.on('SIGINT', () => shutdown('SIGINT'))
 
-  // Keep the event loop alive.
   setInterval(() => {}, 1 << 30)
 }
 

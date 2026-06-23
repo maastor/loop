@@ -1,10 +1,8 @@
-// renderer/src/screens/Settings.tsx — settings: background daemon, global pause,
-// default permission mode, missed-run grace, and per-run timeout.
 import React from 'react'
 import { useStore } from '../store'
 import { ScreenHead, Toggle, Seg, Icon } from '../components'
 import { PERMISSION_MODES } from '@shared/schedule'
-import type { PermissionMode } from '@shared/types'
+import type { AgentId, PermissionMode } from '@shared/types'
 import type { ScreenProps } from '../views'
 
 export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
@@ -61,6 +59,23 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
       <div className="panel settings-section">
         <div className="settings-row">
           <div>
+            <div className="settings-label">Default agent</div>
+            <div className="settings-desc">
+              Agent preselected when creating a new routine. Existing routines are unchanged.
+            </div>
+          </div>
+          <Seg
+            value={settings.defaultAgent}
+            onChange={(value) => void setSetting('defaultAgent', value as AgentId)}
+            options={[
+              { value: 'claude', label: 'Claude' },
+              { value: 'codex', label: 'Codex' }
+            ]}
+          />
+        </div>
+
+        <div className="settings-row">
+          <div>
             <div className="settings-label">Run routines in the background</div>
             <div className="settings-desc">
               Installs a macOS background agent so scheduled routines fire even when Loop is fully
@@ -80,6 +95,20 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
             </div>
           </div>
           <Toggle value={settings.pausedAll} onChange={(v) => void setPausedAll(v)} />
+        </div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Notify when a run finishes</div>
+            <div className="settings-desc">
+              Posts a macOS notification when a routine run completes or fails, whether it ran in
+              Loop or the background agent.
+            </div>
+          </div>
+          <Toggle
+            value={settings.notifyOnComplete}
+            onChange={(v) => void setSetting('notifyOnComplete', v)}
+          />
         </div>
       </div>
 
@@ -108,11 +137,11 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
               skipped. Routines can override this.
             </div>
           </div>
-          <label className="inline-field">
+          <label className="numeric-field">
             <input
               type="number"
               min={0}
-              className="input time-input mono"
+              className="numeric-input mono"
               value={settings.defaultMissedRunGraceMinutes}
               onChange={(e) =>
                 void setSetting('defaultMissedRunGraceMinutes', Math.max(0, +e.target.value || 0))
@@ -130,11 +159,11 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
               routine indefinitely. Set to 0 to disable.
             </div>
           </div>
-          <label className="inline-field">
+          <label className="numeric-field">
             <input
               type="number"
               min={0}
-              className="input time-input mono"
+              className="numeric-input mono"
               value={settings.runTimeoutMinutes}
               onChange={(e) =>
                 void setSetting('runTimeoutMinutes', Math.max(0, +e.target.value || 0))

@@ -6,7 +6,8 @@ This file is the source of truth for AI agents and contributors working in this 
 ## What this is
 
 **Loop** is a macOS Electron app: a manager for "routines" -- a prompt + schedule +
-working directory + model that runs **Claude Code headless (`claude -p`)** on a
+working directory + agent + model that runs **Claude Code (`claude -p`) or Codex
+(`codex exec`) headlessly** on a
 recurring basis, with a calendar, run history, and full transcripts (status / duration /
 cost / tokens). Stack: electron-vite + React 18 + TypeScript + zustand. Uses **npm**
 (not pnpm/yarn).
@@ -62,7 +63,7 @@ src/shared/   Pure TS, no node/electron. The single source of truth for data + l
               (freq engine + natural-language parser, ported from project/app/data.js),
               format.ts, seed.ts (first-run routines), ipc.ts (IPC channel constants).
 src/core/     Node-only, shared by BOTH the main process and the daemon:
-              persistence.ts (Store), claude-runner.ts (real execution), scheduler.ts (tick).
+              persistence.ts (Store), agent-specific runners (real execution), scheduler.ts (tick).
 src/main/     Electron main process: index.ts (lifecycle), window.ts, ipc.ts (handlers +
               broadcast), tray.ts (menu-bar item), launchd.ts (background daemon install).
 src/preload/  contextBridge -> window.api (typed in api-types.ts). The only
@@ -93,12 +94,10 @@ src/renderer/ React UI. store.ts (zustand, mirrors main over IPC), App.tsx (shel
 
 ### Execution
 
-`runClaude` (`core/claude-runner.ts`) spawns the real CLI:
-`claude -p <prompt> --output-format stream-json --verbose --model <id>` with `cwd` =
-the routine's dir (`~` expanded). It parses the NDJSON event stream into transcript
-entries (assistant text / tool_use / tool_result) and a final `result` event -> summary +
-cost + tokens + duration, deriving "changes" (edits/commits/PRs) from tool usage.
-`resolveClaudeCommand()` probes common install paths and augments `PATH` because GUI and
+`runAgent` dispatches to the selected real CLI. Claude runs with stream-json output;
+Codex runs via `codex exec --json`. Both runners use the routine directory (`~` expanded),
+parse JSONL into the shared transcript/result model, and derive edits/commits/PRs from tool
+usage. Command resolution probes common install paths and augments `PATH` because GUI and
 daemon processes start with a sparse environment.
 
 ### Scheduling model

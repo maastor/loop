@@ -1,4 +1,3 @@
-// renderer/src/Markdown.tsx — render Claude's Markdown output (summaries, assistant messages).
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'

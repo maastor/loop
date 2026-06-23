@@ -1587,6 +1587,33 @@ button {
 .time-input {
   width: 110px;
 }
+.model-select {
+  width: 100%;
+}
+.numeric-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 110px;
+  padding: 0 10px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+}
+.numeric-field:focus-within {
+  border-color: var(--accent);
+}
+.numeric-input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 0;
+  color: var(--text);
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 13px;
+}
 .dir-wrap {
   display: flex;
   align-items: center;

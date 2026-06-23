@@ -1,9 +1,15 @@
-// renderer/src/screens/RoutineDetail.tsx — routine detail: prompt block, stats,
-// danger-zone delete, recent runs. Ported from project/app/screens-routines.jsx
-// (RoutineDetailScreen).
 import React from 'react'
 import { useStore } from '../store'
-import { ScreenHead, Btn, Icon, Toggle, ModelChip, StatusDot, RunStats } from '../components'
+import {
+  ScreenHead,
+  Btn,
+  Icon,
+  Toggle,
+  AgentChip,
+  ModelChip,
+  StatusDot,
+  RunStats
+} from '../components'
 import { describeSchedule, computeNextRun } from '@shared/schedule'
 import { fmtDateTime, relUntil } from '@shared/format'
 import type { ScreenProps } from '../views'
@@ -59,6 +65,12 @@ export function RoutineDetailScreen({
             {routine.prompt}
           </div>
           <div className="kv-grid">
+            <div className="kv">
+              <span className="kv-k mono">agent</span>
+              <span className="kv-v">
+                <AgentChip agent={routine.agent} />
+              </span>
+            </div>
             <div className="kv">
               <span className="kv-k mono">working dir</span>
               <span className="kv-v mono">

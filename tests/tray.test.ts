@@ -10,6 +10,7 @@ function routine(over: Partial<Routine> = {}): Routine {
     name: 'Morning standup',
     prompt: 'do it',
     dir: '~/work',
+    agent: 'claude',
     model: 'sonnet',
     enabled: true,
     schedule: { freq: 'daily', time: '10:00', days: [], everyHours: 0 },
@@ -34,11 +35,13 @@ function run(over: Partial<Run> = {}): Run {
 }
 
 const settings = (over: Partial<Settings> = {}): Settings => ({
+  defaultAgent: 'claude',
   daemonEnabled: false,
   pausedAll: false,
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
+  notifyOnComplete: true,
   worktreeBaseDir: '~/Library/Application Support/loop/worktrees',
   ...over
 })
@@ -89,7 +92,6 @@ describe('buildMenuModel', () => {
     const m = buildMenuModel(routines, [], settings(), NOW)
     const nextLabels = labels(m).filter((l) => /^[ABC] —/.test(l))
     expect(nextLabels).toHaveLength(2)
-    // B (10:00) before C (11:00); disabled D excluded.
     expect(nextLabels[0].startsWith('B —')).toBe(true)
     expect(nextLabels[1].startsWith('C —')).toBe(true)
   })

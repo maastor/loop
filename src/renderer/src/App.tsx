@@ -1,4 +1,3 @@
-// renderer/src/App.tsx — app shell: titlebar, sidebar nav, routing, editor sheet, tweaks.
 import React from 'react'
 import { useStore } from './store'
 import { Icon } from './components'
@@ -86,7 +85,6 @@ export default function App(): React.JSX.Element {
   return (
     <div className="app-root" style={appVars}>
       <div className="sidebar">
-        {/* Draggable strip that hosts the macOS traffic lights (top-left of window). */}
         <div className="sidebar-drag" />
         <div className="sidebar-brand">
           <span className="sidebar-brand-mark">
@@ -94,7 +92,7 @@ export default function App(): React.JSX.Element {
           </span>
           <div>
             <div className="sidebar-brand-name">Loop</div>
-            <div className="sidebar-brand-sub mono">for Claude Code</div>
+            <div className="sidebar-brand-sub mono">for coding agents</div>
           </div>
         </div>
         <nav className="sidebar-nav">
@@ -141,7 +139,6 @@ export default function App(): React.JSX.Element {
       </div>
 
       <div className="main-col">
-        {/* Draggable top bar across the content area; hosts the quick-status pill. */}
         <div className="topbar">
           <MenuBar nav={nav} now={now} />
         </div>

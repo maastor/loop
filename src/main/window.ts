@@ -1,4 +1,3 @@
-// main/window.ts — main application window (dark, terminal-styled, hiddenInset chrome).
 import { join } from 'path'
 import { app, BrowserWindow, shell, nativeTheme } from 'electron'
 import { is } from '@electron-toolkit/utils'
@@ -59,7 +58,6 @@ export function createMainWindow(): BrowserWindow {
   return mainWindow
 }
 
-/** Show & focus the window, recreating it if it was closed. */
 export function showMainWindow(): void {
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (mainWindow.isMinimized()) {

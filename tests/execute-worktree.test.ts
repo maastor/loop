@@ -17,11 +17,13 @@ vi.mock('@core/git-worktree', () => ({
 }))
 
 const settings: Settings = {
+  defaultAgent: 'claude',
   daemonEnabled: false,
   pausedAll: false,
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
+  notifyOnComplete: true,
   worktreeBaseDir: '/tmp/loop-worktrees'
 }
 
@@ -31,6 +33,7 @@ const routine: Routine = {
   prompt: 'do work',
   dir: '/repo/packages/app',
   executeInWorktree: true,
+  agent: 'claude',
   model: 'sonnet',
   enabled: true,
   schedule: { freq: 'daily', time: '09:00', days: [], everyHours: 0 }
@@ -72,7 +75,7 @@ describe('executeRoutine worktree handling', () => {
   })
 
   it('creates a worktree before launching Claude in the worktree subdirectory', async () => {
-    const { executeRoutine } = await import('@core/scheduler')
+    const { executeRoutine } = await import('@core/routine-execution')
     const run = runningRun()
     const store = fakeStore(run)
     mocks.prepareGitWorktree.mockResolvedValue({
@@ -121,7 +124,7 @@ describe('executeRoutine worktree handling', () => {
   })
 
   it('fails clearly and does not launch Claude when worktree setup fails', async () => {
-    const { executeRoutine } = await import('@core/scheduler')
+    const { executeRoutine } = await import('@core/routine-execution')
     const run = runningRun()
     const store = fakeStore(run)
     mocks.prepareGitWorktree.mockRejectedValue(new Error('Could not find git repository'))

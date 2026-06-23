@@ -1,4 +1,3 @@
-// renderer/src/store.ts — app state backed by the main process over IPC.
 import { create } from 'zustand'
 import type { Routine, Run, Tweaks, Settings, AppData, UpdateStatus } from '@shared/types'
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
@@ -10,7 +9,6 @@ type LoopState = {
   tweaks: Tweaks
   settings: Settings
   daemon: DaemonStatus
-  /** Runtime updater state — NOT part of persisted AppData, so applyData leaves it alone. */
   update: UpdateStatus
   loaded: boolean
   loadError: string | null
@@ -46,11 +44,13 @@ export const useStore = create<LoopState>((set, get) => ({
     routineSortBy: 'name'
   },
   settings: {
+    defaultAgent: 'claude',
     daemonEnabled: false,
     pausedAll: false,
     defaultPermissionMode: 'bypass',
     defaultMissedRunGraceMinutes: 720,
     runTimeoutMinutes: 60,
+    notifyOnComplete: true,
     worktreeBaseDir: DEFAULT_WORKTREE_BASE_DIR
   },
   daemon: { installed: false, loaded: false },
@@ -60,29 +60,15 @@ export const useStore = create<LoopState>((set, get) => ({
 
   load: async () => {
     try {
-      const [routines, runs, tweaks, settings, daemon] = await Promise.all([
-        window.api.routines.list(),
-        window.api.runs.list(),
-        window.api.tweaks.get(),
-        window.api.settings.get(),
-        window.api.daemon.status()
-      ])
-      set({ routines, runs, tweaks, settings, daemon, loaded: true, loadError: null })
+      const [data, daemon] = await Promise.all([window.api.data.get(), window.api.daemon.status()])
+      set({ ...stateFromAppData(data), daemon, loaded: true, loadError: null })
     } catch (e) {
-      // Surface the failure instead of leaving the UI stuck on "Loading…".
       set({ loaded: true, loadError: String(e) })
     }
   },
 
   applyData: (data) => {
-    set({
-      routines: data.routines,
-      runs: [...data.runs].sort(
-        (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
-      ),
-      tweaks: data.tweaks,
-      settings: data.settings
-    })
+    set(stateFromAppData(data))
   },
 
   createRoutine: async (input) => {
@@ -133,7 +119,6 @@ export const useStore = create<LoopState>((set, get) => ({
     set({ update: status })
   },
   startUpdate: async () => {
-    // Progress + final phase arrive via the update:status push (applyUpdateStatus).
     await window.api.update.start()
   },
   openRelease: async () => {
@@ -141,14 +126,23 @@ export const useStore = create<LoopState>((set, get) => ({
   }
 }))
 
-/** Wire the main-process "data changed" push into the store. Call once at startup. */
 export function subscribeToDataChanges(): () => void {
-  return window.api.onDataChanged((data) => {
+  return window.api.data.onChanged((data) => {
     useStore.getState().applyData(data)
   })
 }
 
-/** Wire the updater status push into the store. Call once at startup. */
+function stateFromAppData(
+  data: AppData
+): Pick<LoopState, 'routines' | 'runs' | 'tweaks' | 'settings'> {
+  return {
+    routines: data.routines,
+    runs: [...data.runs].sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()),
+    tweaks: data.tweaks,
+    settings: data.settings
+  }
+}
+
 export function subscribeToUpdateStatus(): () => void {
   return window.api.update.onStatus((status) => {
     useStore.getState().applyUpdateStatus(status)

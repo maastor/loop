@@ -1,11 +1,10 @@
-// shared/seed.ts — first-run seed data. Routines ported from project/app/data.js.
-// Runs are intentionally empty: real runs are produced by executing Claude Code.
 import type { AppData, Routine, Tweaks, Settings } from './types'
 
 export const seedRoutines: Routine[] = [
   {
     id: 'rt-triage',
     name: 'Morning issue triage',
+    agent: 'claude',
     model: 'sonnet',
     enabled: false,
     dir: '~',
@@ -16,6 +15,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-deps',
     name: 'Nightly dependency audit',
+    agent: 'claude',
     model: 'sonnet',
     enabled: false,
     dir: '~',
@@ -26,6 +26,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-changelog',
     name: 'Changelog draft',
+    agent: 'claude',
     model: 'opus',
     enabled: false,
     dir: '~',
@@ -36,6 +37,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-flaky',
     name: 'Flaky test hunter',
+    agent: 'claude',
     model: 'haiku',
     enabled: false,
     dir: '~',
@@ -46,6 +48,7 @@ export const seedRoutines: Routine[] = [
   {
     id: 'rt-docs',
     name: 'Docs link checker',
+    agent: 'claude',
     model: 'haiku',
     enabled: false,
     dir: '~',
@@ -66,11 +69,13 @@ export const defaultTweaks: Tweaks = {
 export const DEFAULT_WORKTREE_BASE_DIR = '~/Library/Application Support/loop/worktrees'
 
 export const defaultSettings: Settings = {
+  defaultAgent: 'claude',
   daemonEnabled: false,
   pausedAll: false,
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
+  notifyOnComplete: true,
   worktreeBaseDir: DEFAULT_WORKTREE_BASE_DIR
 }
 

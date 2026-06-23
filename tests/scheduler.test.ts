@@ -8,6 +8,7 @@ function routine(schedule: Routine['schedule']): Routine {
     name: 'Test',
     prompt: 'do thing',
     dir: '~/',
+    agent: 'claude',
     model: 'sonnet',
     enabled: true,
     schedule
@@ -16,7 +17,7 @@ function routine(schedule: Routine['schedule']): Routine {
 
 describe('latestOccurrenceAtOrBefore', () => {
   it("returns today's daily occurrence once the time has passed", () => {
-    const now = new Date(2026, 0, 5, 10, 0, 0) // Mon Jan 5, 10:00
+    const now = new Date(2026, 0, 5, 10, 0, 0)
     const occ = latestOccurrenceAtOrBefore(
       routine({ freq: 'daily', time: '09:00', days: [], everyHours: 0 }),
       now
@@ -36,12 +37,11 @@ describe('latestOccurrenceAtOrBefore', () => {
   })
 
   it('skips weekends for weekday schedules', () => {
-    const sun = new Date(2026, 0, 4, 12, 0, 0) // Sunday
+    const sun = new Date(2026, 0, 4, 12, 0, 0)
     const occ = latestOccurrenceAtOrBefore(
       routine({ freq: 'weekdays', time: '09:00', days: [], everyHours: 0 }),
       sun
     )
-    // most recent weekday occurrence is Friday Jan 2 at 09:00
     expect(occ!.getDate()).toBe(2)
   })
 
@@ -51,7 +51,6 @@ describe('latestOccurrenceAtOrBefore', () => {
       routine({ freq: 'hourly', time: '00:00', days: [], everyHours: 6 }),
       now
     )
-    // slots at 00,06,12,18 → latest before 13:30 is 12:00
     expect(occ!.getHours()).toBe(12)
   })
 })

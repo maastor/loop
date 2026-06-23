@@ -1,44 +1,30 @@
-// core/scheduler.ts — the tick loop that fires routines on schedule.
-//
-// Modeled on orca's AutomationService (src/main/automations/service.ts): a setInterval
-// tick that, on each pass, finds routines whose latest schedule occurrence is due and
-// not yet satisfied by an existing run, then dispatches them. Missed occurrences older
-// than the grace window are skipped (recorded implicitly by advancing past them).
 import type { Routine, Run, Settings } from '@shared/types'
 import { scheduleTimesForDay } from '@shared/schedule'
 import type { Store } from './persistence'
-import { runClaude, createRunningRun } from './claude-runner'
-import { prepareGitWorktree } from './git-worktree'
+import {
+  createRunningRun,
+  executeRoutine,
+  startRoutineExecution,
+  type RoutineExecution
+} from './routine-execution'
 
 const DEFAULT_TICK_MS = 60_000
-/**
- * Fallback missed-run grace when Settings/routine don't specify one (minutes). Kept in
- * sync with seed.ts defaultSettings. A scheduled occurrence missed while the machine was
- * offline still fires on wake if it is no more than this stale; older ones are recorded
- * as skipped. Resolution order: routine.missedRunGraceMinutes → Settings → this default.
- */
+// Older persisted settings may omit the grace value; keep this aligned with defaultSettings.
 const DEFAULT_GRACE_MIN = 720
-/**
- * A run still marked "running" but older than this is considered dead (the process
- * that owned it exited without finishing). Such runs must NOT block future scheduling,
- * otherwise a single interrupted run wedges a routine forever (manual runs bypass this
- * check, which is why "manual works but scheduled never fires" shows up).
- */
+// A crashed process must not leave a routine permanently blocked by a running row.
 export const STALE_RUN_MS = 2 * 60 * 60 * 1000
 
-/** Resolve a routine's effective missed-run grace window in ms. */
 function graceMsFor(routine: Routine, settings: Settings): number {
   const min =
     routine.missedRunGraceMinutes ?? settings.defaultMissedRunGraceMinutes ?? DEFAULT_GRACE_MIN
   return min * 60 * 1000
 }
 
-/** Find the most recent schedule occurrence at or before `now`, scanning back 14 days. */
+// Fourteen days covers every supported weekly schedule while bounding the scan.
 export function latestOccurrenceAtOrBefore(routine: Routine, now: Date): Date | null {
   for (let i = 0; i < 14; i++) {
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
     const times = scheduleTimesForDay(routine.schedule, day)
-    // Walk times latest-first within the day.
     for (const t of times.slice().reverse()) {
       const [h, m] = t.split(':').map(Number)
       const cand = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, m)
@@ -52,104 +38,20 @@ export function latestOccurrenceAtOrBefore(routine: Routine, now: Date): Date | 
 
 export type SchedulerOptions = {
   tickMs?: number
-  /** Override executor (used in tests). Defaults to runClaude-backed execution. */
-  execute?: (routine: Routine, run: Run, store: Store) => Promise<void>
-  /** Called after each tick with the list of routine ids fired this tick. */
+  execute?: RoutineExecution
   onFire?: (routineIds: string[]) => void
+  /** Called once a dispatched run finishes (success/failed), with its final persisted row. */
+  onRunComplete?: (routine: Routine, run: Run) => void
   log?: (msg: string) => void
-}
-
-/** Execute a routine end-to-end: stream Claude output into the run record. */
-export async function executeRoutine(routine: Routine, run: Run, store: Store): Promise<void> {
-  const settings = store.getSettings()
-  const permissionMode = routine.permissionMode ?? settings.defaultPermissionMode ?? 'bypass'
-  const timeoutMs = (settings.runTimeoutMinutes ?? 0) * 60 * 1000
-  const worktreeEntries: Run['transcript'] = []
-  let runDir = routine.dir
-
-  if (routine.executeInWorktree) {
-    try {
-      const worktree = await prepareGitWorktree({
-        sourceDir: routine.dir,
-        baseDir: settings.worktreeBaseDir,
-        routineName: routine.name,
-        runId: run.id
-      })
-      runDir = worktree.executionDir
-      worktreeEntries.push({
-        role: 'result',
-        text: `Git worktree created at ${worktree.worktreeDir} on ${worktree.branch}`
-      })
-      if (worktree.executionDir !== worktree.worktreeDir) {
-        worktreeEntries.push({ role: 'result', text: `Running in ${worktree.executionDir}` })
-      }
-      store.updateRun(run.id, {
-        worktreeDir: worktree.worktreeDir,
-        worktreeBranch: worktree.branch,
-        transcript: mergeWorktreeTranscript(
-          [{ role: 'user', text: routine.prompt }],
-          worktreeEntries
-        )
-      })
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
-      store.updateRun(run.id, {
-        status: 'failed',
-        durationSec: elapsedSeconds(run),
-        summary: `Run failed — ${message}`,
-        transcript: [
-          { role: 'user', text: routine.prompt },
-          { role: 'result', text: message, err: true }
-        ]
-      })
-      return
-    }
-  }
-
-  const result = await runClaude(
-    { prompt: routine.prompt, dir: runDir, model: routine.model, permissionMode, timeoutMs },
-    {
-      onTranscript: (_entry, all) => {
-        store.updateRun(run.id, { transcript: mergeWorktreeTranscript(all, worktreeEntries) })
-      }
-    }
-  )
-  store.updateRun(run.id, {
-    status: result.status,
-    durationSec: result.durationSec,
-    costUsd: result.costUsd,
-    tokens: result.tokens,
-    summary: result.summary,
-    changes: result.changes,
-    transcript: mergeWorktreeTranscript(result.transcript, worktreeEntries)
-  })
-}
-
-function mergeWorktreeTranscript(
-  transcript: Run['transcript'],
-  worktreeEntries: Run['transcript']
-): Run['transcript'] {
-  if (worktreeEntries.length === 0) {
-    return transcript
-  }
-  const [first, ...rest] = transcript
-  if (first?.role === 'user') {
-    return [first, ...worktreeEntries, ...rest]
-  }
-  return [...worktreeEntries, ...transcript]
-}
-
-function elapsedSeconds(run: Run): number {
-  return Math.max(0, Math.round((Date.now() - new Date(run.start).getTime()) / 1000))
 }
 
 export class Scheduler {
   private timer: NodeJS.Timeout | null = null
   private readonly tickMs: number
-  private readonly execute: (routine: Routine, run: Run, store: Store) => Promise<void>
+  private readonly execute: RoutineExecution
   private readonly onFire?: (routineIds: string[]) => void
+  private readonly onRunComplete?: (routine: Routine, run: Run) => void
   private readonly log: (msg: string) => void
-  /** Routine ids currently executing (in this process) to avoid double-dispatch. */
   private inFlight = new Set<string>()
 
   constructor(
@@ -159,6 +61,7 @@ export class Scheduler {
     this.tickMs = opts.tickMs ?? DEFAULT_TICK_MS
     this.execute = opts.execute ?? executeRoutine
     this.onFire = opts.onFire
+    this.onRunComplete = opts.onRunComplete
     this.log = opts.log ?? (() => {})
   }
 
@@ -167,7 +70,6 @@ export class Scheduler {
       return
     }
     this.log(`scheduler start (tick ${this.tickMs}ms)`)
-    // Run an immediate tick, then on the interval.
     void this.tick()
     this.timer = setInterval(() => void this.tick(), this.tickMs)
   }
@@ -179,7 +81,6 @@ export class Scheduler {
     }
   }
 
-  /** Evaluate all routines once. Public for tests. */
   async tick(now: Date = new Date()): Promise<string[]> {
     const settings = this.store.getSettings()
     if (settings.pausedAll) {
@@ -205,14 +106,6 @@ export class Scheduler {
     return fired
   }
 
-  /**
-   * Decide what to do with a routine this tick:
-   *  - 'fire' : its latest occurrence is due and within the grace window
-   *  - 'skip' : its latest occurrence is past the grace window (missed while offline)
-   *  - 'none' : nothing to do (no occurrence, already satisfied, or genuinely running)
-   * Only the single latest occurrence is ever acted on — missed runs are not replayed
-   * one-per-hour; this mirrors orca's run_once_within_grace policy.
-   */
   private evaluate(routine: Routine, now: Date, settings: Settings): 'fire' | 'skip' | 'none' {
     if (this.inFlight.has(routine.id)) {
       return 'none'
@@ -223,12 +116,11 @@ export class Scheduler {
     }
     const occIso = occ.toISOString()
     const runs = this.store.listRuns(routine.id)
-    // Already satisfied this occurrence (fired, skipped, or recorded)?
+    // scheduledFor is the cross-process deduplication key shared with the daemon.
     if (runs.some((r) => r.scheduledFor === occIso)) {
       return 'none'
     }
-    // Don't pile onto a run that is genuinely still in progress, but ignore stale
-    // "running" rows left behind by a crashed/quit process so they can't wedge us.
+    // Ignore stale rows left by crashed processes, but do not overlap live runs.
     if (
       runs.some(
         (r) => r.status === 'running' && now.getTime() - new Date(r.start).getTime() < STALE_RUN_MS
@@ -236,24 +128,21 @@ export class Scheduler {
     ) {
       return 'none'
     }
-    // Past the grace window → the machine was offline too long; record a skip instead
-    // of silently dropping it, so the gap is visible in history/calendar.
+    // Persist expired occurrences so history shows the gap and future ticks deduplicate it.
     if (now.getTime() - occ.getTime() > graceMsFor(routine, settings)) {
       return 'skip'
     }
     return 'fire'
   }
 
-  /** Record a missed occurrence as a skipped run so it's deduped and visible in history. */
   private recordSkipped(routine: Routine, now: Date, settings: Settings): void {
     const occ = latestOccurrenceAtOrBefore(routine, now)
     if (!occ) {
       return
     }
     const graceMin = Math.round(graceMsFor(routine, settings) / 60000)
-    const run = createRunningRun(routine.id, routine.prompt, routine.dir, 'scheduled')
+    const run = createRunningRun(routine, 'scheduled', occ.toISOString())
     run.status = 'skipped'
-    run.scheduledFor = occ.toISOString()
     run.durationSec = 0
     run.summary = `Skipped — Loop was offline at the scheduled time and the ${graceMin}-minute catch-up window had passed.`
     run.transcript = [
@@ -270,18 +159,16 @@ export class Scheduler {
   private async dispatch(routine: Routine, now: Date): Promise<void> {
     this.inFlight.add(routine.id)
     const occ = latestOccurrenceAtOrBefore(routine, now)
-    const run = createRunningRun(routine.id, routine.prompt, routine.dir, 'scheduled')
-    run.scheduledFor = occ ? occ.toISOString() : undefined
-    this.store.addRun(run)
+    const { run, completion } = startRoutineExecution(this.store, routine, {
+      trigger: 'scheduled',
+      scheduledFor: occ?.toISOString(),
+      execute: this.execute
+    })
     this.log(`dispatch ${routine.name} (${routine.id}) for ${run.scheduledFor}`)
     try {
-      await this.execute(routine, run, this.store)
-    } catch (e) {
-      this.store.updateRun(run.id, {
-        status: 'failed',
-        durationSec: 0,
-        summary: `Run failed — ${String(e)}`
-      })
+      await completion
+      // Read the final persisted row so notifiers see the resolved status/summary.
+      this.onRunComplete?.(routine, this.store.getRun(run.id) ?? run)
     } finally {
       this.inFlight.delete(routine.id)
     }

@@ -1,5 +1,3 @@
-// shared/schedule.ts — schedule engine + natural-language parsing.
-// Ported faithfully from project/app/data.js (the design prototype).
 import type { Schedule, ModelMeta, PermissionMode } from './types'
 
 export const MODELS: ModelMeta[] = [
@@ -12,14 +10,18 @@ export const PERMISSION_MODES: { id: PermissionMode; label: string; desc: string
   {
     id: 'bypass',
     label: 'Auto',
-    desc: 'Skip all permission prompts (--dangerously-skip-permissions)'
+    desc: 'Skip permission prompts and agent sandboxing'
   },
   {
     id: 'acceptEdits',
     label: 'Auto-edit',
-    desc: 'Auto-accept file edits; prompt-gated tools are denied'
+    desc: 'Allow edits inside the working directory; deny broader access'
   },
-  { id: 'default', label: 'Ask', desc: 'Deny anything needing approval — safest, may do nothing' }
+  {
+    id: 'default',
+    label: 'Ask',
+    desc: 'Use the safest unattended mode; restricted actions are denied'
+  }
 ]
 
 export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -105,7 +107,6 @@ export function computeNextRun(s: Schedule, from?: Date): Date | null {
   return null
 }
 
-// ── natural language parsing ───────────────────────────────
 const DAY_MAP: Record<string, number> = {
   sunday: 0,
   monday: 1,

@@ -1,8 +1,3 @@
-// renderer/src/MenuBar.tsx — in-titlebar quick-status pill + dropdown (worker unit 6).
-// Renders a small status pill (spark + pulsing dot when running) docked at the right
-// of the draggable titlebar; clicking it toggles the quick-status dropdown.
-// Dropdown content ported from project/app/screens-menubar.jsx (running now / next up /
-// recent / pause all / open). The OS menu bar and system tray are separate concerns.
 import React from 'react'
 import { useStore } from './store'
 import { Icon, StatusDot, Toggle } from './components'
@@ -18,7 +13,6 @@ export function MenuBar({ nav, now }: { nav: Nav; now: Date }): React.JSX.Elemen
   const [open, setOpen] = React.useState(false)
   const wrapRef = React.useRef<HTMLDivElement>(null)
 
-  // Close the dropdown on outside click / Escape so it behaves like a real menu.
   React.useEffect(() => {
     if (!open) {
       return

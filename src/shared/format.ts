@@ -1,4 +1,3 @@
-// shared/format.ts — display formatters. Ported from project/app/data.js.
 import { DAY_NAMES, MONTHS } from './schedule'
 
 export const fmtTime = (d: Date | string): string => {
