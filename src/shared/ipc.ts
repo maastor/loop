@@ -35,6 +35,7 @@ export type RoutineCreateInput = {
   name: string
   prompt: string
   dir: string
+  executeInWorktree?: boolean
   model: ModelId
   schedule: Schedule
   enabled?: boolean

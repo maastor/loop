@@ -1573,6 +1573,17 @@ button {
   gap: 8px;
   font-size: 12px;
 }
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.checkbox-field input {
+  accent-color: var(--accent);
+}
 .time-input {
   width: 110px;
 }
@@ -1707,6 +1718,10 @@ select,
   margin-top: 3px;
   max-width: 460px;
   line-height: 1.5;
+}
+.settings-path-field {
+  width: min(420px, 48vw);
+  flex-shrink: 0;
 }
 .stub-note {
   padding: 40px;

@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import type { Routine, Run, Tweaks, Settings, AppData, UpdateStatus } from '@shared/types'
 import type { RoutineCreateInput, DaemonStatus } from '@shared/ipc'
+import { DEFAULT_WORKTREE_BASE_DIR } from '@shared/seed'
 
 type LoopState = {
   routines: Routine[]
@@ -49,7 +50,8 @@ export const useStore = create<LoopState>((set, get) => ({
     pausedAll: false,
     defaultPermissionMode: 'bypass',
     defaultMissedRunGraceMinutes: 720,
-    runTimeoutMinutes: 60
+    runTimeoutMinutes: 60,
+    worktreeBaseDir: DEFAULT_WORKTREE_BASE_DIR
   },
   daemon: { installed: false, loaded: false },
   update: { phase: 'idle', info: null },

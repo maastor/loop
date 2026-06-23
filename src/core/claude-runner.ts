@@ -11,6 +11,7 @@ import type { Change, ModelId, PermissionMode, Run, TranscriptEntry } from '@sha
 import { expandHome } from './paths'
 import { type StreamEvent } from './claude-stream'
 import { createTranscriptCollector } from './claude-run-transcript'
+import { buildChildEnv } from './process-env'
 
 export type RunCallbacks = {
   /** Called whenever a new transcript entry is produced. */
@@ -45,20 +46,6 @@ export function resolveClaudeCommand(): string {
   }
   // Fall back to bare name and let PATH resolution try.
   return 'claude'
-}
-
-/** Build an augmented PATH so spawned `claude` can find node, git, gh, etc. */
-function buildEnv(): NodeJS.ProcessEnv {
-  const extra = [
-    join(homedir(), '.local', 'bin'),
-    '/opt/homebrew/bin',
-    '/usr/local/bin',
-    '/usr/bin',
-    '/bin'
-  ]
-  const current = process.env.PATH ? process.env.PATH.split(':') : []
-  const merged = Array.from(new Set([...current, ...extra])).join(':')
-  return { ...process.env, PATH: merged }
 }
 
 const MODEL_FLAG: Record<ModelId, string> = {
@@ -133,7 +120,7 @@ export function runClaude(
 
     let child
     try {
-      child = spawn(cmd, args, { cwd, env: buildEnv() })
+      child = spawn(cmd, args, { cwd, env: buildChildEnv() })
     } catch (e) {
       collector.push({ role: 'result', text: `Failed to launch claude: ${String(e)}`, err: true })
       resolve({

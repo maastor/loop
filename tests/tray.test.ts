@@ -39,6 +39,7 @@ const settings = (over: Partial<Settings> = {}): Settings => ({
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
+  worktreeBaseDir: '~/Library/Application Support/loop/worktrees',
   ...over
 })
 

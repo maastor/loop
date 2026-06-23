@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { DEFAULT_WORKTREE_BASE_DIR } from '@shared/seed'
 
 // Redirect Store storage to a temp dir BEFORE importing the module that reads paths.
 let dir: string
@@ -76,5 +77,20 @@ describe('Store', () => {
     // Should not throw and should yield usable data (from backup or defaults).
     expect(store2.getAll().tweaks).toBeTruthy()
     expect(existsSync(join(dir, 'loop-data.json'))).toBe(true)
+  })
+
+  it('adds the default worktree location when loading older settings', async () => {
+    writeFileSync(
+      join(dir, 'loop-data.json'),
+      JSON.stringify({
+        version: 1,
+        routines: [],
+        runs: [],
+        settings: { daemonEnabled: true, pausedAll: false }
+      }),
+      'utf-8'
+    )
+    const store = await freshStore()
+    expect(store.getSettings().worktreeBaseDir).toBe(DEFAULT_WORKTREE_BASE_DIR)
   })
 })

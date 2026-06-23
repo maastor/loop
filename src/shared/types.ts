@@ -34,6 +34,8 @@ export type Routine = {
   prompt: string
   /** Working directory; may contain a leading ~. */
   dir: string
+  /** Run each execution inside a fresh git worktree created from dir's repo. */
+  executeInWorktree?: boolean
   model: ModelId
   enabled: boolean
   schedule: Schedule
@@ -85,6 +87,10 @@ export type Run = {
   trigger?: 'manual' | 'scheduled'
   /** For scheduled runs: ISO timestamp of the schedule occurrence this run satisfies (dedup key). */
   scheduledFor?: string
+  /** Worktree root created for this run, when Routine.executeInWorktree is enabled. */
+  worktreeDir?: string
+  /** Branch created for this run's worktree. */
+  worktreeBranch?: string
 }
 
 export type LayoutVariant = 'rows' | 'cards' | 'table'
@@ -115,6 +121,8 @@ export type Settings = {
   defaultMissedRunGraceMinutes: number
   /** Kill a single run after this many minutes (0 = no timeout). Guards against a hung CLI. */
   runTimeoutMinutes: number
+  /** Base directory where per-run git worktrees are created. May contain a leading ~. */
+  worktreeBaseDir: string
 }
 
 /** Lifecycle of the in-app (assisted) updater, tracked at runtime — not persisted. */

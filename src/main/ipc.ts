@@ -52,6 +52,7 @@ export function registerIpcHandlers({ store, broadcast, reconcileScheduler }: Ip
       name: input.name,
       prompt: input.prompt,
       dir: input.dir,
+      executeInWorktree: input.executeInWorktree,
       model: input.model,
       schedule: input.schedule,
       enabled: input.enabled ?? true,

@@ -58,8 +58,14 @@ export function RunDetailScreen({
         </div>
         <div className="run-meta">
           <span className="kv-k mono">directory</span>
-          <span className="mono">{routine ? routine.dir : '—'}</span>
+          <span className="mono">{run.worktreeDir ?? (routine ? routine.dir : '—')}</span>
         </div>
+        {run.worktreeBranch ? (
+          <div className="run-meta">
+            <span className="kv-k mono">branch</span>
+            <span className="mono">{run.worktreeBranch}</span>
+          </div>
+        ) : null}
       </div>
 
       <div className="run-detail-grid">

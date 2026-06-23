@@ -21,6 +21,7 @@ export function buildRoutineEdits({
   name,
   prompt,
   dir,
+  executeInWorktree,
   model,
   schedule,
   permissionMode,
@@ -29,6 +30,7 @@ export function buildRoutineEdits({
   name: string
   prompt: string
   dir: string
+  executeInWorktree: boolean
   model: ModelId
   schedule: Schedule
   permissionMode: PermissionMode | ''
@@ -38,6 +40,7 @@ export function buildRoutineEdits({
     name: name.trim(),
     prompt: prompt.trim(),
     dir: dir.trim() || '~',
+    executeInWorktree,
     model,
     schedule,
     permissionMode: permissionMode || undefined,
@@ -59,6 +62,8 @@ export function useRoutineEditorState({
   setPrompt: React.Dispatch<React.SetStateAction<string>>
   dir: string
   setDir: React.Dispatch<React.SetStateAction<string>>
+  executeInWorktree: boolean
+  setExecuteInWorktree: React.Dispatch<React.SetStateAction<boolean>>
   model: ModelId
   setModel: React.Dispatch<React.SetStateAction<ModelId>>
   permissionMode: PermissionMode | ''
@@ -86,6 +91,9 @@ export function useRoutineEditorState({
   const [name, setName] = React.useState(routine ? routine.name : '')
   const [prompt, setPrompt] = React.useState(routine ? routine.prompt : '')
   const [dir, setDir] = React.useState(routine ? routine.dir : '~')
+  const [executeInWorktree, setExecuteInWorktree] = React.useState(
+    routine?.executeInWorktree ?? false
+  )
   const [model, setModel] = React.useState<ModelId>(routine ? routine.model : 'sonnet')
   // Empty string inherits the global default from Settings.
   const [permissionMode, setPermissionMode] = React.useState<PermissionMode | ''>(
@@ -152,6 +160,7 @@ export function useRoutineEditorState({
       name,
       prompt,
       dir,
+      executeInWorktree,
       model,
       schedule,
       permissionMode,
@@ -171,6 +180,8 @@ export function useRoutineEditorState({
     setPrompt,
     dir,
     setDir,
+    executeInWorktree,
+    setExecuteInWorktree,
     model,
     setModel,
     permissionMode,

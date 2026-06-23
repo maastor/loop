@@ -21,7 +21,16 @@ function stubApi(): void {
         routineSortBy: 'name'
       })
     },
-    settings: { get: async () => ({ daemonEnabled: false, pausedAll: false }) },
+    settings: {
+      get: async () => ({
+        daemonEnabled: false,
+        pausedAll: false,
+        defaultPermissionMode: 'bypass',
+        defaultMissedRunGraceMinutes: 720,
+        runTimeoutMinutes: 60,
+        worktreeBaseDir: '~/Library/Application Support/loop/worktrees'
+      })
+    },
     daemon: { status: async () => ({ installed: false, loaded: false }) },
     onDataChanged: () => () => {}
   }
@@ -76,6 +85,7 @@ describe('Editor', () => {
         name: '  Nightly audit  ',
         prompt: '  Check deps  ',
         dir: '   ',
+        executeInWorktree: true,
         model: 'sonnet',
         schedule: { freq: 'daily', time: '22:00', days: [], everyHours: 0 },
         permissionMode: '',
@@ -85,6 +95,7 @@ describe('Editor', () => {
       name: 'Nightly audit',
       prompt: 'Check deps',
       dir: '~',
+      executeInWorktree: true,
       model: 'sonnet',
       schedule: { freq: 'daily', time: '22:00', days: [], everyHours: 0 },
       permissionMode: undefined,

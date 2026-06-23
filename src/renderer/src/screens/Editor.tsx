@@ -22,6 +22,8 @@ export function Editor({
     setPrompt,
     dir,
     setDir,
+    executeInWorktree,
+    setExecuteInWorktree,
     model,
     setModel,
     permissionMode,
@@ -216,6 +218,14 @@ export function Editor({
                   Browse…
                 </button>
               </div>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={executeInWorktree}
+                  onChange={(e) => setExecuteInWorktree(e.target.checked)}
+                />
+                <span>Run in a new git worktree</span>
+              </label>
             </label>
             <div className="field" style={{ flex: 1 }}>
               <span className="field-label mono">model</span>

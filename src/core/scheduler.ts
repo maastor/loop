@@ -8,6 +8,7 @@ import type { Routine, Run, Settings } from '@shared/types'
 import { scheduleTimesForDay } from '@shared/schedule'
 import type { Store } from './persistence'
 import { runClaude, createRunningRun } from './claude-runner'
+import { prepareGitWorktree } from './git-worktree'
 
 const DEFAULT_TICK_MS = 60_000
 /**
@@ -63,11 +64,53 @@ export async function executeRoutine(routine: Routine, run: Run, store: Store): 
   const settings = store.getSettings()
   const permissionMode = routine.permissionMode ?? settings.defaultPermissionMode ?? 'bypass'
   const timeoutMs = (settings.runTimeoutMinutes ?? 0) * 60 * 1000
+  const worktreeEntries: Run['transcript'] = []
+  let runDir = routine.dir
+
+  if (routine.executeInWorktree) {
+    try {
+      const worktree = await prepareGitWorktree({
+        sourceDir: routine.dir,
+        baseDir: settings.worktreeBaseDir,
+        routineName: routine.name,
+        runId: run.id
+      })
+      runDir = worktree.executionDir
+      worktreeEntries.push({
+        role: 'result',
+        text: `Git worktree created at ${worktree.worktreeDir} on ${worktree.branch}`
+      })
+      if (worktree.executionDir !== worktree.worktreeDir) {
+        worktreeEntries.push({ role: 'result', text: `Running in ${worktree.executionDir}` })
+      }
+      store.updateRun(run.id, {
+        worktreeDir: worktree.worktreeDir,
+        worktreeBranch: worktree.branch,
+        transcript: mergeWorktreeTranscript(
+          [{ role: 'user', text: routine.prompt }],
+          worktreeEntries
+        )
+      })
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      store.updateRun(run.id, {
+        status: 'failed',
+        durationSec: elapsedSeconds(run),
+        summary: `Run failed — ${message}`,
+        transcript: [
+          { role: 'user', text: routine.prompt },
+          { role: 'result', text: message, err: true }
+        ]
+      })
+      return
+    }
+  }
+
   const result = await runClaude(
-    { prompt: routine.prompt, dir: routine.dir, model: routine.model, permissionMode, timeoutMs },
+    { prompt: routine.prompt, dir: runDir, model: routine.model, permissionMode, timeoutMs },
     {
       onTranscript: (_entry, all) => {
-        store.updateRun(run.id, { transcript: all })
+        store.updateRun(run.id, { transcript: mergeWorktreeTranscript(all, worktreeEntries) })
       }
     }
   )
@@ -78,8 +121,26 @@ export async function executeRoutine(routine: Routine, run: Run, store: Store): 
     tokens: result.tokens,
     summary: result.summary,
     changes: result.changes,
-    transcript: result.transcript
+    transcript: mergeWorktreeTranscript(result.transcript, worktreeEntries)
   })
+}
+
+function mergeWorktreeTranscript(
+  transcript: Run['transcript'],
+  worktreeEntries: Run['transcript']
+): Run['transcript'] {
+  if (worktreeEntries.length === 0) {
+    return transcript
+  }
+  const [first, ...rest] = transcript
+  if (first?.role === 'user') {
+    return [first, ...worktreeEntries, ...rest]
+  }
+  return [...worktreeEntries, ...transcript]
+}
+
+function elapsedSeconds(run: Run): number {
+  return Math.max(0, Math.round((Date.now() - new Date(run.start).getTime()) / 1000))
 }
 
 export class Scheduler {
