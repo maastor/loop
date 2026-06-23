@@ -66,6 +66,8 @@ export const defaultTweaks: Tweaks = {
   routineSortBy: 'name'
 }
 
+export const DEFAULT_WORKTREE_BASE_DIR = '~/Library/Application Support/loop/worktrees'
+
 export const defaultSettings: Settings = {
   defaultAgent: 'claude',
   daemonEnabled: false,
@@ -73,7 +75,8 @@ export const defaultSettings: Settings = {
   defaultPermissionMode: 'bypass',
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
-  notifyOnComplete: true
+  notifyOnComplete: true,
+  worktreeBaseDir: DEFAULT_WORKTREE_BASE_DIR
 }
 
 export const APP_DATA_VERSION = 1

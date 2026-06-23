@@ -1,6 +1,7 @@
 import type { Routine, Run } from '@shared/types'
 import type { Store } from './persistence'
 import { runAgent } from './agent-runner'
+import { prepareGitWorktree } from './git-worktree'
 
 export type RoutineExecution = (routine: Routine, run: Run, store: Store) => Promise<void>
 
@@ -37,12 +38,54 @@ export async function executeRoutine(routine: Routine, run: Run, store: Store): 
   const settings = store.getSettings()
   const permissionMode = routine.permissionMode ?? settings.defaultPermissionMode ?? 'bypass'
   const timeoutMs = (settings.runTimeoutMinutes ?? 0) * 60 * 1000
+  const worktreeEntries: Run['transcript'] = []
+  let runDir = routine.dir
+
+  if (routine.executeInWorktree) {
+    try {
+      const worktree = await prepareGitWorktree({
+        sourceDir: routine.dir,
+        baseDir: settings.worktreeBaseDir,
+        routineName: routine.name,
+        runId: run.id
+      })
+      runDir = worktree.executionDir
+      worktreeEntries.push({
+        role: 'result',
+        text: `Git worktree created at ${worktree.worktreeDir} on ${worktree.branch}`
+      })
+      if (worktree.executionDir !== worktree.worktreeDir) {
+        worktreeEntries.push({ role: 'result', text: `Running in ${worktree.executionDir}` })
+      }
+      store.updateRun(run.id, {
+        worktreeDir: worktree.worktreeDir,
+        worktreeBranch: worktree.branch,
+        transcript: mergeWorktreeTranscript(
+          [{ role: 'user', text: routine.prompt }],
+          worktreeEntries
+        )
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      store.updateRun(run.id, {
+        status: 'failed',
+        durationSec: elapsedSeconds(run),
+        summary: `Run failed — ${message}`,
+        transcript: [
+          { role: 'user', text: routine.prompt },
+          { role: 'result', text: message, err: true }
+        ]
+      })
+      return
+    }
+  }
+
   const result = await runAgent(
-    routine,
+    { ...routine, dir: runDir },
     { permissionMode, timeoutMs },
     {
       onTranscript: (_entry, all) => {
-        store.updateRun(run.id, { transcript: all })
+        store.updateRun(run.id, { transcript: mergeWorktreeTranscript(all, worktreeEntries) })
       }
     }
   )
@@ -53,8 +96,26 @@ export async function executeRoutine(routine: Routine, run: Run, store: Store): 
     tokens: result.tokens,
     summary: result.summary,
     changes: result.changes,
-    transcript: result.transcript
+    transcript: mergeWorktreeTranscript(result.transcript, worktreeEntries)
   })
+}
+
+function mergeWorktreeTranscript(
+  transcript: Run['transcript'],
+  worktreeEntries: Run['transcript']
+): Run['transcript'] {
+  if (worktreeEntries.length === 0) {
+    return transcript
+  }
+  const [first, ...rest] = transcript
+  if (first?.role === 'user') {
+    return [first, ...worktreeEntries, ...rest]
+  }
+  return [...worktreeEntries, ...transcript]
+}
+
+function elapsedSeconds(run: Run): number {
+  return Math.max(0, Math.round((Date.now() - new Date(run.start).getTime()) / 1000))
 }
 
 export function startRoutineExecution(

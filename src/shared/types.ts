@@ -35,6 +35,8 @@ export type Routine = {
   prompt: string
   /** Working directory; may contain a leading ~. */
   dir: string
+  /** Run each execution inside a fresh git worktree created from dir's repo. */
+  executeInWorktree?: boolean
   agent: AgentId
   model: string
   enabled: boolean
@@ -82,6 +84,10 @@ export type Run = {
   trigger?: 'manual' | 'scheduled'
   /** For scheduled runs: ISO timestamp of the schedule occurrence this run satisfies (dedup key). */
   scheduledFor?: string
+  /** Worktree root created for this run, when Routine.executeInWorktree is enabled. */
+  worktreeDir?: string
+  /** Branch created for this run's worktree. */
+  worktreeBranch?: string
 }
 
 export type LayoutVariant = 'rows' | 'cards' | 'table'
@@ -113,6 +119,8 @@ export type Settings = {
   runTimeoutMinutes: number
   /** Post a macOS notification when a routine run finishes (success or failure). */
   notifyOnComplete: boolean
+  /** Base directory where per-run git worktrees are created. May contain a leading ~. */
+  worktreeBaseDir: string
 }
 
 export type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'ready' | 'error'

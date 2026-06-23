@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync, utimesSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { defaultAppData } from '@shared/seed'
+import { DEFAULT_WORKTREE_BASE_DIR, defaultAppData } from '@shared/seed'
 import type { AppData } from '@shared/types'
 import type { AppDataPersistence } from '@core/app-data-file'
 
@@ -133,5 +133,20 @@ describe('Store', () => {
     const store2 = await freshStore()
     expect(store2.getTweaks().accent).toBe('#abcabc')
     expect(existsSync(join(dir, 'loop-data.json'))).toBe(true)
+  })
+
+  it('adds the default worktree location when loading older settings', async () => {
+    writeFileSync(
+      join(dir, 'loop-data.json'),
+      JSON.stringify({
+        version: 1,
+        routines: [],
+        runs: [],
+        settings: { daemonEnabled: true, pausedAll: false }
+      }),
+      'utf-8'
+    )
+    const store = await freshStore()
+    expect(store.getSettings().worktreeBaseDir).toBe(DEFAULT_WORKTREE_BASE_DIR)
   })
 })

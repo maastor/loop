@@ -84,6 +84,10 @@ export function RoutineDetailScreen({
               </span>
             </div>
             <div className="kv">
+              <span className="kv-k mono">worktree</span>
+              <span className="kv-v mono">{routine.executeInWorktree ? 'per run' : 'off'}</span>
+            </div>
+            <div className="kv">
               <span className="kv-k mono">next run</span>
               <span className="kv-v mono">
                 {next ? `${fmtDateTime(next)} (${relUntil(next, now)})` : '—'}
