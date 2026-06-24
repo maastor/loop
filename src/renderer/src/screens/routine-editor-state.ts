@@ -29,6 +29,7 @@ export function buildRoutineEdits({
   name,
   prompt,
   dir,
+  executeInWorktree,
   agent,
   model,
   schedule,
@@ -38,6 +39,7 @@ export function buildRoutineEdits({
   name: string
   prompt: string
   dir: string
+  executeInWorktree: boolean
   agent: AgentId
   model: string
   schedule: Schedule
@@ -48,6 +50,7 @@ export function buildRoutineEdits({
     name: name.trim(),
     prompt: prompt.trim(),
     dir: dir.trim() || '~',
+    executeInWorktree,
     agent,
     model,
     schedule,
@@ -70,6 +73,8 @@ export function useRoutineEditorState({
   setPrompt: React.Dispatch<React.SetStateAction<string>>
   dir: string
   setDir: React.Dispatch<React.SetStateAction<string>>
+  executeInWorktree: boolean
+  setExecuteInWorktree: React.Dispatch<React.SetStateAction<boolean>>
   agent: AgentId
   setAgent: (agent: AgentId) => void
   model: string
@@ -102,6 +107,9 @@ export function useRoutineEditorState({
   const [name, setName] = React.useState(routine ? routine.name : '')
   const [prompt, setPrompt] = React.useState(routine ? routine.prompt : '')
   const [dir, setDir] = React.useState(routine ? routine.dir : '~')
+  const [executeInWorktree, setExecuteInWorktree] = React.useState(
+    routine?.executeInWorktree ?? false
+  )
   const [agent, setAgent] = React.useState<AgentId>(routine?.agent ?? defaultAgent)
   const [claudeModel, setClaudeModel] = React.useState(
     routine?.agent === 'claude' ? routine.model : DEFAULT_AGENT_MODEL.claude
@@ -230,6 +238,7 @@ export function useRoutineEditorState({
       name,
       prompt,
       dir,
+      executeInWorktree,
       agent,
       model,
       schedule,
@@ -250,6 +259,8 @@ export function useRoutineEditorState({
     setPrompt,
     dir,
     setDir,
+    executeInWorktree,
+    setExecuteInWorktree,
     agent,
     setAgent,
     model,

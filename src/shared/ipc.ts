@@ -28,6 +28,7 @@ export type RoutineCreateInput = {
   name: string
   prompt: string
   dir: string
+  executeInWorktree?: boolean
   agent: AgentId
   model: string
   schedule: Schedule

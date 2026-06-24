@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore } from '../store'
-import { ScreenHead, Toggle, Seg } from '../components'
+import { ScreenHead, Toggle, Seg, Icon } from '../components'
 import { PERMISSION_MODES } from '@shared/schedule'
 import type { AgentId, PermissionMode } from '@shared/types'
 import type { ScreenProps } from '../views'
@@ -27,6 +27,12 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
   }
 
   const permDesc = PERMISSION_MODES.find((m) => m.id === settings.defaultPermissionMode)?.desc
+  const chooseWorktreeBaseDir = async (): Promise<void> => {
+    const picked = await window.api.dialog.selectDirectory()
+    if (picked) {
+      await setSetting('worktreeBaseDir', picked)
+    }
+  }
   const checking = update.phase === 'checking'
   const downloading = update.phase === 'downloading'
   const updateMsg = ((): string => {
@@ -165,6 +171,32 @@ export function SettingsScreen(_props: ScreenProps): React.JSX.Element {
             />
             <span className="mono dim">min</span>
           </label>
+        </div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Worktree location</div>
+            <div className="settings-desc">
+              Base folder for per-run git worktrees. Blank uses Loop&apos;s default application
+              support folder.
+            </div>
+          </div>
+          <div className="dir-wrap settings-path-field">
+            <Icon name="folder" size={14} style={{ color: 'var(--text-3)' }} />
+            <input
+              className="input mono dir-input"
+              value={settings.worktreeBaseDir}
+              onChange={(e) => void setSetting('worktreeBaseDir', e.target.value)}
+            />
+            <button
+              type="button"
+              className="link-btn mono"
+              style={{ flexShrink: 0 }}
+              onClick={() => void chooseWorktreeBaseDir()}
+            >
+              Browse…
+            </button>
+          </div>
         </div>
       </div>
 

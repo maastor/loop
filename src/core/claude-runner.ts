@@ -6,6 +6,7 @@ import type { PermissionMode } from '@shared/types'
 import { expandHome } from './paths'
 import { type StreamEvent } from './claude-stream'
 import { createTranscriptCollector } from './claude-run-transcript'
+import { buildChildEnv } from './process-env'
 import type { AgentRunOptions, RunCallbacks, RunResult } from './agent-runner'
 
 // GUI and launchd processes do not inherit the user's shell PATH.
@@ -25,19 +26,6 @@ export function resolveClaudeCommand(): string {
     }
   }
   return 'claude'
-}
-
-function buildEnv(): NodeJS.ProcessEnv {
-  const extra = [
-    join(homedir(), '.local', 'bin'),
-    '/opt/homebrew/bin',
-    '/usr/local/bin',
-    '/usr/bin',
-    '/bin'
-  ]
-  const current = process.env.PATH ? process.env.PATH.split(':') : []
-  const merged = Array.from(new Set([...current, ...extra])).join(':')
-  return { ...process.env, PATH: merged }
 }
 
 // Headless runs have no TTY to answer permission prompts.
@@ -89,7 +77,7 @@ export function runClaude(opts: AgentRunOptions, cb: RunCallbacks = {}): Promise
 
     let child
     try {
-      child = spawn(cmd, args, { cwd, env: buildEnv() })
+      child = spawn(cmd, args, { cwd, env: buildChildEnv() })
     } catch (e) {
       collector.push({ role: 'result', text: `Failed to launch claude: ${String(e)}`, err: true })
       resolve({

@@ -42,6 +42,7 @@ const settings = (over: Partial<Settings> = {}): Settings => ({
   defaultMissedRunGraceMinutes: 720,
   runTimeoutMinutes: 60,
   notifyOnComplete: true,
+  worktreeBaseDir: '~/Library/Application Support/loop/worktrees',
   ...over
 })
 
