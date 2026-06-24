@@ -106,8 +106,9 @@ Most subtle bugs live here:
 
 - `Scheduler` (`core/scheduler.ts`) is a `setInterval` tick (60s). Each tick fires every
   enabled routine whose **latest schedule occurrence at-or-before now** is within a
-  30-min grace window and not already satisfied (deduped by `Run.scheduledFor` ISO
-  string).
+  configurable missed-run grace window (per-routine `missedRunGraceMinutes`, else
+  `Settings.defaultMissedRunGraceMinutes`, default 720 min) and not already satisfied
+  (deduped by `Run.scheduledFor` ISO string).
 - **The in-app scheduler runs whenever the app is open**, regardless of the daemon. The
   launchd daemon covers the fully-quit case. Both share the data file; the
   `scheduledFor` dedup prevents double-runs across processes.
